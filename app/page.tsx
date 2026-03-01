@@ -87,7 +87,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen text-white p-10">
+    <div className="min-h-screen text-white p-5 md:p-10">
 
       {/* 🟢 SI NO HAY USUARIO → MOSTRAR LOGIN */}
       {!user && (
@@ -120,7 +120,7 @@ export default function Dashboard() {
                     {artistData.name}
                   </h2>
 
-                  <div className="grid grid-cols-2 gap-10">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
 
                     {/* 🎵 TOP 5 CANCIONES */}
                     <div>
