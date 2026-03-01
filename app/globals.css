@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+/* Fondo base */
+body {
+  background-color: #0a0a0a;
+  color: white;
+  font-family: system-ui, sans-serif;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ff1493;
+  border-radius: 10px;
+}
