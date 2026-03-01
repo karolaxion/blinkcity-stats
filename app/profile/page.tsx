@@ -64,9 +64,11 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-black text-white p-10">
-      <div className="flex justify-between items-center mb-10">
-        <h1 className="text-3xl font-bold">
+    <div className="min-h-screen bg-black text-white p-5 md:p-10">
+
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-6 md:gap-0 text-center md:text-left">
+        <h1 className="text-2xl md:text-3xl font-bold">
           Perfil de {user.name} 💗
         </h1>
 
@@ -78,15 +80,19 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-10 mb-12">
+      {/* GRID RESPONSIVE */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 mb-12">
+
+        {/* TOP SONGS */}
         <div>
-          <h2 className="text-xl font-semibold mb-4">
+          <h2 className="text-lg md:text-xl font-semibold mb-4">
             🎵 Tus Top 5 Canciones
           </h2>
+
           {topSongs.map((item, index) => (
             <div
               key={item.song}
-              className="bg-zinc-800 p-3 rounded-lg mb-2 flex justify-between"
+              className="bg-zinc-800 p-3 md:p-4 rounded-lg mb-2 flex justify-between text-sm md:text-base"
             >
               <span>
                 {index + 1}. {item.song}
@@ -96,14 +102,16 @@ export default function ProfilePage() {
           ))}
         </div>
 
+        {/* TOP ARTISTS */}
         <div>
-          <h2 className="text-xl font-semibold mb-4">
+          <h2 className="text-lg md:text-xl font-semibold mb-4">
             👩‍🎤 Tus Top 5 Artistas
           </h2>
+
           {topArtists.map((item, index) => (
             <div
               key={item.artist}
-              className="bg-zinc-800 p-3 rounded-lg mb-2 flex justify-between"
+              className="bg-zinc-800 p-3 md:p-4 rounded-lg mb-2 flex justify-between text-sm md:text-base"
             >
               <span>
                 {index + 1}. {item.artist}
@@ -112,14 +120,18 @@ export default function ProfilePage() {
             </div>
           ))}
         </div>
+
       </div>
 
-      <button
-        onClick={() => router.push("/")}
-        className="bg-pink-600 px-6 py-3 rounded-lg font-bold"
-      >
-        Ir al Dashboard
-      </button>
+      <div className="text-center md:text-left">
+        <button
+          onClick={() => router.push("/")}
+          className="bg-pink-600 px-6 py-3 rounded-lg font-bold"
+        >
+          Ir al Dashboard
+        </button>
+      </div>
+
     </div>
   );
 }

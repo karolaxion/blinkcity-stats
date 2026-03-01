@@ -25,35 +25,26 @@ export default function ArtistPage() {
   const [monthlyStreams, setMonthlyStreams] = useState(0);
   const [dailyStreams, setDailyStreams] = useState(0);
 
-  const [topSongs, setTopSongs] = useState<
-    { song: string; count: number }[]
-  >([]);
-
-  const [topUsers, setTopUsers] = useState<
-    { user: string; count: number }[]
-  >([]);
+  const [topSongs, setTopSongs] = useState<{ song: string; count: number }[]>([]);
+  const [topUsers, setTopUsers] = useState<{ user: string; count: number }[]>([]);
 
   useEffect(() => {
     const fetchMetrics = async () => {
       const now = new Date();
       const today = now.toISOString().split("T")[0];
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-        .toISOString();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-      // Histórico
       const { count: total } = await supabase
         .from("streams")
         .select("*", { count: "exact", head: true })
         .eq("artist_id", artistId);
 
-      // Mensual
       const { count: monthly } = await supabase
         .from("streams")
         .select("*", { count: "exact", head: true })
         .eq("artist_id", artistId)
         .gte("played_at", monthStart);
 
-      // Diario
       const { count: daily } = await supabase
         .from("streams")
         .select("*", { count: "exact", head: true })
@@ -72,31 +63,22 @@ export default function ArtistPage() {
     const fetchTopSongs = async () => {
       const now = new Date();
       const today = now.toISOString().split("T")[0];
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-        .toISOString();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
       let query = supabase
         .from("streams")
         .select("track_name")
         .eq("artist_id", artistId);
 
-      if (songPeriod === "monthly") {
-        query = query.gte("played_at", monthStart);
-      }
-
-      if (songPeriod === "daily") {
-        query = query.gte("played_at", today);
-      }
+      if (songPeriod === "monthly") query = query.gte("played_at", monthStart);
+      if (songPeriod === "daily") query = query.gte("played_at", today);
 
       const { data } = await query;
-
       if (!data) return;
 
       const counts: Record<string, number> = {};
-
       data.forEach((row) => {
-        counts[row.track_name] =
-          (counts[row.track_name] || 0) + 1;
+        counts[row.track_name] = (counts[row.track_name] || 0) + 1;
       });
 
       const sorted = Object.entries(counts)
@@ -114,28 +96,20 @@ export default function ArtistPage() {
     const fetchTopUsers = async () => {
       const now = new Date();
       const today = now.toISOString().split("T")[0];
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-        .toISOString();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
       let query = supabase
         .from("streams")
         .select("user_display_name")
         .eq("artist_id", artistId);
 
-      if (userPeriod === "monthly") {
-        query = query.gte("played_at", monthStart);
-      }
-
-      if (userPeriod === "daily") {
-        query = query.gte("played_at", today);
-      }
+      if (userPeriod === "monthly") query = query.gte("played_at", monthStart);
+      if (userPeriod === "daily") query = query.gte("played_at", today);
 
       const { data } = await query;
-
       if (!data) return;
 
       const counts: Record<string, number> = {};
-
       data.forEach((row) => {
         counts[row.user_display_name] =
           (counts[row.user_display_name] || 0) + 1;
@@ -160,10 +134,13 @@ export default function ArtistPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-10">
-      <h1 className="text-4xl font-bold mb-8">{artistName}</h1>
+    <div className="min-h-screen text-white px-5 md:pl-24 md:pr-10 pt-20">
 
-      <div className="grid grid-cols-3 gap-6 mb-12">
+      <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center md:text-left">
+        {artistName}
+      </h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <MetricCard title="🎧 Histórico" value={totalStreams} />
         <MetricCard title="📅 Mensual" value={monthlyStreams} />
         <MetricCard title="🕒 Diario" value={dailyStreams} />
@@ -202,9 +179,9 @@ export default function ArtistPage() {
 
 function MetricCard({ title, value }: any) {
   return (
-    <div className="bg-zinc-800 p-6 rounded-xl text-center">
-      <p>{title}</p>
-      <p className="text-2xl font-bold">{value}</p>
+    <div className="bg-zinc-800 p-4 md:p-6 rounded-xl text-center">
+      <p className="text-sm md:text-base">{title}</p>
+      <p className="text-xl md:text-2xl font-bold">{value}</p>
     </div>
   );
 }
@@ -212,13 +189,13 @@ function MetricCard({ title, value }: any) {
 function Section({ title, period, setPeriod, children }: any) {
   return (
     <>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">{title}</h2>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+        <h2 className="text-xl md:text-2xl font-bold">{title}</h2>
 
         <select
           value={period}
           onChange={(e) => setPeriod(e.target.value)}
-          className="bg-zinc-800 p-2 rounded-lg"
+          className="bg-zinc-800 p-2 rounded-lg text-sm md:text-base"
         >
           <option value="historical">Histórico</option>
           <option value="monthly">Mensual</option>
@@ -233,7 +210,7 @@ function Section({ title, period, setPeriod, children }: any) {
 
 function Row({ left, right }: any) {
   return (
-    <div className="bg-zinc-800 p-4 rounded-lg flex justify-between">
+    <div className="bg-zinc-800 p-3 md:p-4 rounded-lg flex justify-between text-sm md:text-base">
       <span>{left}</span>
       <span className="font-bold">{right}</span>
     </div>
