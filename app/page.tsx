@@ -15,7 +15,7 @@ export default function Dashboard() {
     { id: "3eVa5w3URK5duf6eyVDbu9", name: "ROSÉ" },
   ];
 
-  // 🔐 Revisar si hay sesión guardada
+  // 🔐 Revisar sesión
   useEffect(() => {
     const stored = localStorage.getItem("blinkcity_user");
     if (stored) {
@@ -23,7 +23,7 @@ export default function Dashboard() {
     }
   }, []);
 
-  // 📊 Cargar datos cuando hay usuario
+  // 📊 Cargar datos
   useEffect(() => {
     if (!user) return;
 
@@ -68,7 +68,6 @@ export default function Dashboard() {
     fetchData();
   }, [user]);
 
-  // 🔑 LOGIN SPOTIFY
   const handleLogin = () => {
     const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
     const redirectUri = window.location.origin + "/callback";
@@ -89,10 +88,10 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen text-white p-5 md:p-10">
 
-      {/* 🟢 SI NO HAY USUARIO → MOSTRAR LOGIN */}
+      {/* 🟢 LOGIN */}
       {!user && (
-        <div className="flex flex-col items-center justify-center h-screen space-y-6">
-          <h1 className="text-4xl font-bold">
+        <div className="flex flex-col items-center justify-center h-screen space-y-6 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold">
             BLINKCITY STATS 💗
           </h1>
 
@@ -105,10 +104,10 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* 🔵 SI HAY USUARIO → MOSTRAR DASHBOARD */}
+      {/* 🔵 DASHBOARD */}
       {user && (
         <>
-          <h1 className="text-3xl font-bold mb-10">
+          <h1 className="text-2xl md:text-3xl font-bold mb-10 text-center md:text-left">
             Bienvenida {user.name} 💗
           </h1>
 
@@ -116,7 +115,7 @@ export default function Dashboard() {
             {Object.entries(dataByArtist).map(
               ([artistId, artistData]: any) => (
                 <div key={artistId}>
-                  <h2 className="text-3xl font-bold mb-6">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-6">
                     {artistData.name}
                   </h2>
 
@@ -124,7 +123,7 @@ export default function Dashboard() {
 
                     {/* 🎵 TOP 5 CANCIONES */}
                     <div>
-                      <h3 className="text-xl font-semibold mb-4">
+                      <h3 className="text-lg md:text-xl font-semibold mb-4">
                         🎵 Top 5 Canciones
                       </h3>
 
@@ -132,7 +131,7 @@ export default function Dashboard() {
                         (item: any, index: number) => (
                           <div
                             key={item.song}
-                            className="bg-zinc-800 p-3 rounded-lg mb-2 flex justify-between"
+                            className="bg-zinc-800 p-3 md:p-4 rounded-lg mb-2 flex justify-between text-sm md:text-base"
                           >
                             <span>
                               {index + 1}. {item.song}
@@ -147,7 +146,7 @@ export default function Dashboard() {
 
                     {/* 👑 TOP 5 FANS */}
                     <div>
-                      <h3 className="text-xl font-semibold mb-4">
+                      <h3 className="text-lg md:text-xl font-semibold mb-4">
                         👑 Top 5 Fans
                       </h3>
 
@@ -155,7 +154,7 @@ export default function Dashboard() {
                         (item: any, index: number) => (
                           <div
                             key={item.user}
-                            className="bg-zinc-800 p-3 rounded-lg mb-2 flex justify-between"
+                            className="bg-zinc-800 p-3 md:p-4 rounded-lg mb-2 flex justify-between text-sm md:text-base"
                           >
                             <span>
                               {index + 1}. {item.user}
@@ -175,7 +174,6 @@ export default function Dashboard() {
           </div>
         </>
       )}
-
     </div>
   );
 }
