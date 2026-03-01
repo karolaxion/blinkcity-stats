@@ -71,7 +71,7 @@ export default function Dashboard() {
   // 🔑 LOGIN SPOTIFY
   const handleLogin = () => {
     const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
-    const redirectUri = "http://127.0.0.1:3000/callback";
+    const redirectUri = window.location.origin + "/callback";
     const scope = "user-read-recently-played";
 
     const authUrl =
