@@ -32,17 +32,22 @@ export default function ProfilePage() {
       const artistCounts: Record<string, number> = {};
 
       data.forEach((row) => {
-        songCounts[row.track_name] =
-          (songCounts[row.track_name] || 0) + 1;
+        const songKey = `${row.track_name}|||${row.artist_name}`;
+
+        songCounts[songKey] =
+          (songCounts[songKey] || 0) + 1;
 
         artistCounts[row.artist_name] =
           (artistCounts[row.artist_name] || 0) + 1;
       });
 
       const sortedSongs = Object.entries(songCounts)
-        .map(([song, count]) => ({ song, count }))
+        .map(([key, count]) => {
+          const [song, artist] = key.split("|||");
+          return { song, artist, count };
+        })
         .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
+        .slice(0, 10); // 🔥 Top 10 ahora
 
       const sortedArtists = Object.entries(artistCounts)
         .map(([artist, count]) => ({ artist, count }))
@@ -66,7 +71,6 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-black text-white p-5 md:p-10">
 
-      {/* HEADER */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-6 md:gap-0 text-center md:text-left">
         <h1 className="text-2xl md:text-3xl font-bold">
           Perfil de {user.name} 💗
@@ -80,29 +84,36 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      {/* GRID RESPONSIVE */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 mb-12">
 
-        {/* TOP SONGS */}
+        {/* 🔥 TOP 10 CANCIONES */}
         <div>
           <h2 className="text-lg md:text-xl font-semibold mb-4">
-            🎵 Tus Top 5 Canciones
+            🎵 Tus Top 10 Canciones
           </h2>
 
           {topSongs.map((item, index) => (
             <div
-              key={item.song}
+              key={`${item.song}-${item.artist}`}
               className="bg-zinc-800 p-3 md:p-4 rounded-lg mb-2 flex justify-between text-sm md:text-base"
             >
-              <span>
-                {index + 1}. {item.song}
+              <div>
+                <div>
+                  {index + 1}. {item.song}
+                </div>
+                <div className="text-zinc-400 text-xs md:text-sm">
+                  {item.artist}
+                </div>
+              </div>
+
+              <span className="font-bold">
+                🔥 {item.count}
               </span>
-              <span>🔥 {item.count}</span>
             </div>
           ))}
         </div>
 
-        {/* TOP ARTISTS */}
+        {/* 👩‍🎤 TOP 5 ARTISTAS */}
         <div>
           <h2 className="text-lg md:text-xl font-semibold mb-4">
             👩‍🎤 Tus Top 5 Artistas
@@ -116,7 +127,9 @@ export default function ProfilePage() {
               <span>
                 {index + 1}. {item.artist}
               </span>
-              <span>🎧 {item.count}</span>
+              <span className="font-bold">
+                🎧 {item.count}
+              </span>
             </div>
           ))}
         </div>
