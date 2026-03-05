@@ -3,39 +3,43 @@
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
-
   const router = useRouter();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-white gap-6 text-center px-6">
+    <div className="min-h-screen flex items-center justify-center px-6">
 
-      <h1 className="text-4xl md:text-5xl font-bold">
-        BLINKCITY STATS 💗
-      </h1>
+      <div className="text-center max-w-xl">
 
-      <p className="text-lg text-zinc-300">
-        Bienvenidos a Blinkcity Stats
-      </p>
+        <h1 className="text-5xl md:text-6xl font-extrabold mb-6 text-pink-500 tracking-wide">
+          BLINKCITY STATS
+        </h1>
 
-      <p className="text-sm text-zinc-400 max-w-md">
-        Esta aún es una versión demo. Algunas funciones pueden cambiar o mejorar en el futuro.
-      </p>
+        <p className="text-lg md:text-xl text-gray-200 mb-3">
+          Bienvenidos a Blinkcity Stats
+        </p>
 
-      <div className="flex flex-col gap-4 mt-4">
+        <p className="text-gray-400 mb-10">
+          Esta es una versión demo donde puedes ver tus estadísticas de
+          reproducción conectando tu cuenta de Spotify o Last.fm.
+        </p>
 
-        <button
-          onClick={() => router.push("/api/spotify/login")}
-          className="bg-green-500 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-green-600"
-        >
-          Conectar con Spotify
-        </button>
+        <div className="flex flex-col gap-4">
 
-        <button
-          onClick={() => router.push("/api/lastfm/link")}
-          className="bg-red-600 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-red-700"
-        >
-          Conectar con Last.fm
-        </button>
+          <button
+            onClick={() => router.push("/api/spotify/login")}
+            className="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl text-lg transition"
+          >
+            Conectar con Spotify
+          </button>
+
+          <button
+            onClick={() => router.push("/api/lastfm/link")}
+            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-xl text-lg transition"
+          >
+            Conectar con Last.fm
+          </button>
+
+        </div>
 
       </div>
 
