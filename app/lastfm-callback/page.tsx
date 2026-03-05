@@ -1,42 +1,50 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+export const dynamic = "force-dynamic";
 
-export default function LastFmCallback() {
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export default function LastfmCallbackPage() {
+
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
 
   useEffect(() => {
-    const handleLastFm = async () => {
-      if (!token) return;
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
 
-      if (!session) {
-        router.push("/login");
-        return;
+    if (!token) {
+      router.push("/profile");
+      return;
+    }
+
+    async function connectLastfm() {
+
+      try {
+
+        const res = await fetch(`/api/lastfm/callback?token=${token}`);
+
+        if (res.ok) {
+          router.push("/profile");
+        } else {
+          router.push("/profile");
+        }
+
+      } catch (err) {
+        router.push("/profile");
       }
 
-      await fetch(`/api/lastfm/session?token=${token}`, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+    }
 
-      router.push("/setup");
-    };
+    connectLastfm();
 
-    handleLastFm();
-  }, [token]);
+  }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center text-white">
-      <p>Conectando Last.fm...</p>
+    <div className="flex items-center justify-center h-screen text-white">
+      Conectando con Last.fm...
     </div>
   );
+
 }
