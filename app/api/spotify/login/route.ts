@@ -9,14 +9,14 @@ export async function GET() {
 
   const scope = "user-read-recently-played";
 
-  const url =
-    "https://accounts.spotify.com/authorize?" +
-    new URLSearchParams({
-      response_type: "code",
-      client_id: clientId!,
-      scope,
-      redirect_uri: redirectUri,
-    });
+  const params = new URLSearchParams({
+    response_type: "code",
+    client_id: clientId!,
+    scope: scope,
+    redirect_uri: redirectUri,
+  });
+
+  const url = `https://accounts.spotify.com/authorize?${params.toString()}`;
 
   return NextResponse.redirect(url);
 
