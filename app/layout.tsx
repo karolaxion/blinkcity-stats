@@ -6,10 +6,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className="text-white min-h-screen"
         style={{
+          margin: 0,
+          fontFamily: "system-ui, sans-serif",
           background:
-            "linear-gradient(180deg, #000000 0%, #111111 100%)",
+            "radial-gradient(circle at top, #1a1a1a 0%, #000000 60%)",
+          color: "white",
+          minHeight: "100vh",
         }}
       >
         {children}
