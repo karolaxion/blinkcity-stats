@@ -7,25 +7,37 @@ export default function HomePage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-white gap-8">
+    <div className="min-h-screen flex flex-col items-center justify-center text-white gap-6 text-center px-6">
 
-      <h1 className="text-4xl font-bold">
+      <h1 className="text-4xl md:text-5xl font-bold">
         BLINKCITY STATS 💗
       </h1>
 
-      <button
-        onClick={() => router.push("/api/spotify/login")}
-        className="bg-green-500 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-green-600"
-      >
-        Conectar con Spotify
-      </button>
+      <p className="text-lg text-zinc-300">
+        Bienvenidos a Blinkcity Stats
+      </p>
 
-      <button
-        onClick={() => router.push("/api/lastfm/link")}
-        className="bg-red-600 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-red-700"
-      >
-        Conectar con Last.fm
-      </button>
+      <p className="text-sm text-zinc-400 max-w-md">
+        Esta aún es una versión demo. Algunas funciones pueden cambiar o mejorar en el futuro.
+      </p>
+
+      <div className="flex flex-col gap-4 mt-4">
+
+        <button
+          onClick={() => router.push("/api/spotify/login")}
+          className="bg-green-500 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-green-600"
+        >
+          Conectar con Spotify
+        </button>
+
+        <button
+          onClick={() => router.push("/api/lastfm/link")}
+          className="bg-red-600 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-red-700"
+        >
+          Conectar con Last.fm
+        </button>
+
+      </div>
 
     </div>
   );
