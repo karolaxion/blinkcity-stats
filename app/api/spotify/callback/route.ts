@@ -45,12 +45,13 @@ export async function GET(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  // Guardar spotify_id usando el username como referencia
   await supabase
     .from("profiles")
     .update({
-      spotify_id: spotifyUser.id,
+      spotify_id: spotifyUser.id
     })
-    .eq("id", spotifyUser.id);
+    .eq("username", spotifyUser.display_name);
 
   return NextResponse.redirect("https://blinkcity-stats.vercel.app/profile");
 
