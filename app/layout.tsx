@@ -1,21 +1,26 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import Sidebar from "@/components/Sidebar";
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
+  const pathname = usePathname();
+
+  const showSidebar = pathname !== "/";
+
   return (
     <html lang="en">
-      <body
-        style={{
-          margin: 0,
-          fontFamily: "system-ui, sans-serif",
-          background:
-            "radial-gradient(circle at top, #1a1a1a 0%, #000000 60%)",
-          color: "white",
-          minHeight: "100vh",
-        }}
-      >
+      <body className="bg-black text-white">
+
+        {showSidebar && <Sidebar />}
+
         {children}
+
       </body>
     </html>
   );
