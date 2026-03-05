@@ -1,26 +1,30 @@
-"use client";
+import "./globals.css";
 
-import { usePathname } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
+export const metadata = {
+  title: "Blinkcity Stats",
+  description: "Estadísticas de streaming para fans de BLACKPINK",
+};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-
-  const pathname = usePathname();
-
-  const showSidebar = pathname !== "/";
-
   return (
     <html lang="en">
-      <body className="bg-black text-white">
-
-        {showSidebar && <Sidebar />}
-
-        {children}
-
+      <body
+        className="min-h-screen text-white"
+        style={{
+          margin: 0,
+          background:
+            "radial-gradient(circle at top, #ff2d95 0%, #0a0a0a 40%, #000000 80%)",
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif",
+        }}
+      >
+        <div className="min-h-screen flex flex-col">
+          {children}
+        </div>
       </body>
     </html>
   );
