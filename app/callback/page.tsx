@@ -1,48 +1,81 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
-export default function Page() {
+export default function CallbackPage() {
+
+  const searchParams = useSearchParams();
   const router = useRouter();
 
   useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get("code");
 
-    if (!code) {
-      router.push("/");
-      return;
-    }
+    const connectSpotify = async () => {
 
-    const fetchToken = async () => {
-      const res = await fetch("/api/spotify/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code }),
-      });
+      const code = searchParams.get("code");
 
-      const data = await res.json();
-
-      if (data.user) {
-        localStorage.setItem(
-          "blinkcity_user",
-          JSON.stringify(data.user)
-        );
+      if (!code) {
+        router.push("/profile");
+        return;
       }
 
-      router.push("/");
+      try {
+
+        const response = await fetch("/api/spotify/session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ code })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          router.push("/profile");
+          return;
+        }
+
+        const { data: authData } = await supabase.auth.getUser();
+
+        if (!authData.user) {
+          router.push("/login");
+          return;
+        }
+
+        await supabase
+          .from("profiles")
+          .update({
+            spotify_id: data.spotify_id
+          })
+          .eq("id", authData.user.id);
+
+        router.push("/profile");
+
+      } catch (error) {
+
+        console.error(error);
+        router.push("/profile");
+
+      }
+
     };
 
-    fetchToken();
+    connectSpotify();
+
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white">
-      Procesando inicio de sesión...
+
+    <div className="flex items-center justify-center h-screen text-white">
+
+      <h1 className="text-xl">
+        Conectando con Spotify...
+      </h1>
+
     </div>
+
   );
+
 }

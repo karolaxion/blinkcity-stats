@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
+  const router = useRouter();
+
   const [user, setUser] = useState<any>(null);
   const [dataByArtist, setDataByArtist] = useState<any>({});
 
@@ -15,15 +18,22 @@ export default function Dashboard() {
     { id: "3eVa5w3URK5duf6eyVDbu9", name: "ROSÉ" },
   ];
 
-  // 🔐 Revisar sesión
+  // 🔐 Revisar sesión REAL de Supabase
   useEffect(() => {
-    const stored = localStorage.getItem("blinkcity_user");
-    if (stored) {
-      setUser(JSON.parse(stored));
-    }
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+
+      if (!data.user) {
+        router.push("/login");
+      } else {
+        setUser(data.user);
+      }
+    };
+
+    checkUser();
   }, []);
 
-  // 📊 Cargar datos
+  // 📊 Cargar datos cuando hay usuario autenticado
   useEffect(() => {
     if (!user) return;
 
@@ -68,112 +78,76 @@ export default function Dashboard() {
     fetchData();
   }, [user]);
 
-  const handleLogin = () => {
-    const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
-    const redirectUri = window.location.origin + "/callback";
-    const scope = "user-read-recently-played";
-
-    const authUrl =
-      "https://accounts.spotify.com/authorize?" +
-      new URLSearchParams({
-        response_type: "code",
-        client_id: clientId!,
-        scope: scope,
-        redirect_uri: redirectUri,
-      }).toString();
-
-    window.location.href = authUrl;
-  };
+  if (!user) return null;
 
   return (
     <div className="min-h-screen text-white p-5 md:p-10">
 
-      {/* 🟢 LOGIN */}
-      {!user && (
-        <div className="flex flex-col items-center justify-center h-screen space-y-6 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold">
-            BLINKCITY STATS 💗
-          </h1>
+      <h1 className="text-2xl md:text-3xl font-bold mb-10 text-center md:text-left">
+        Bienvenida {user.username} 💗
+      </h1>
 
-          <button
-            onClick={handleLogin}
-            className="bg-green-500 px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition"
-          >
-            Login with Spotify
-          </button>
-        </div>
-      )}
+      <div className="space-y-16">
+        {Object.entries(dataByArtist).map(
+          ([artistId, artistData]: any) => (
+            <div key={artistId}>
+              <h2 className="text-2xl md:text-3xl font-bold mb-6">
+                {artistData.name}
+              </h2>
 
-      {/* 🔵 DASHBOARD */}
-      {user && (
-        <>
-          <h1 className="text-2xl md:text-3xl font-bold mb-10 text-center md:text-left">
-            Bienvenida {user.name} 💗
-          </h1>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
 
-          <div className="space-y-16">
-            {Object.entries(dataByArtist).map(
-              ([artistId, artistData]: any) => (
-                <div key={artistId}>
-                  <h2 className="text-2xl md:text-3xl font-bold mb-6">
-                    {artistData.name}
-                  </h2>
+                {/* 🎵 TOP 5 CANCIONES */}
+                <div>
+                  <h3 className="text-lg md:text-xl font-semibold mb-4">
+                    🎵 Top 5 Canciones
+                  </h3>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-
-                    {/* 🎵 TOP 5 CANCIONES */}
-                    <div>
-                      <h3 className="text-lg md:text-xl font-semibold mb-4">
-                        🎵 Top 5 Canciones
-                      </h3>
-
-                      {artistData.topSongs.map(
-                        (item: any, index: number) => (
-                          <div
-                            key={item.song}
-                            className="bg-zinc-800 p-3 md:p-4 rounded-lg mb-2 flex justify-between text-sm md:text-base"
-                          >
-                            <span>
-                              {index + 1}. {item.song}
-                            </span>
-                            <span className="text-yellow-400">
-                              🔥 {item.count}
-                            </span>
-                          </div>
-                        )
-                      )}
-                    </div>
-
-                    {/* 👑 TOP 5 FANS */}
-                    <div>
-                      <h3 className="text-lg md:text-xl font-semibold mb-4">
-                        👑 Top 5 Fans
-                      </h3>
-
-                      {artistData.topUsers.map(
-                        (item: any, index: number) => (
-                          <div
-                            key={item.user}
-                            className="bg-zinc-800 p-3 md:p-4 rounded-lg mb-2 flex justify-between text-sm md:text-base"
-                          >
-                            <span>
-                              {index + 1}. {item.user}
-                            </span>
-                            <span className="text-pink-400">
-                              🎧 {item.count}
-                            </span>
-                          </div>
-                        )
-                      )}
-                    </div>
-
-                  </div>
+                  {artistData.topSongs.map(
+                    (item: any, index: number) => (
+                      <div
+                        key={item.song}
+                        className="bg-zinc-800 p-3 md:p-4 rounded-lg mb-2 flex justify-between text-sm md:text-base"
+                      >
+                        <span>
+                          {index + 1}. {item.song}
+                        </span>
+                        <span className="text-yellow-400">
+                          🔥 {item.count}
+                        </span>
+                      </div>
+                    )
+                  )}
                 </div>
-              )
-            )}
-          </div>
-        </>
-      )}
+
+                {/* 👑 TOP 5 FANS */}
+                <div>
+                  <h3 className="text-lg md:text-xl font-semibold mb-4">
+                    👑 Top 5 Fans
+                  </h3>
+
+                  {artistData.topUsers.map(
+                    (item: any, index: number) => (
+                      <div
+                        key={item.user}
+                        className="bg-zinc-800 p-3 md:p-4 rounded-lg mb-2 flex justify-between text-sm md:text-base"
+                      >
+                        <span>
+                          {index + 1}. {item.user}
+                        </span>
+                        <span className="text-pink-400">
+                          🎧 {item.count}
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+
+              </div>
+            </div>
+          )
+        )}
+      </div>
     </div>
   );
 }

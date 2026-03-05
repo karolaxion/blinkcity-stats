@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import "./globals.css";
 
 export default function RootLayout({
@@ -15,12 +16,12 @@ export default function RootLayout({
   const pathname = usePathname();
 
   useEffect(() => {
-    const stored = localStorage.getItem("blinkcity_user");
-    if (stored) {
-      setUser(JSON.parse(stored));
-    } else {
-      setUser(null);
-    }
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+
+    getUser();
   }, [pathname]);
 
   const artists = [
@@ -31,7 +32,7 @@ export default function RootLayout({
     { id: "3eVa5w3URK5duf6eyVDbu9", name: "ROSÉ" },
   ];
 
-  const showSidebar = user !== null;
+  const showSidebar = !!user;
 
   return (
     <html lang="en">
@@ -39,7 +40,7 @@ export default function RootLayout({
 
         {showSidebar && (
           <>
-            {/* BOTÓN MENU */}
+            {/* ☰ BOTÓN MENU */}
             <button
               onClick={() => setOpen(!open)}
               className="fixed top-6 left-6 z-50 text-3xl bg-zinc-900 p-3 rounded-lg shadow-lg"
@@ -47,7 +48,7 @@ export default function RootLayout({
               ☰
             </button>
 
-            {/* FONDO OSCURO CUANDO ABRE */}
+            {/* Overlay */}
             {open && (
               <div
                 className="fixed inset-0 bg-black/50 z-40"
@@ -92,13 +93,14 @@ export default function RootLayout({
                     ))}
                   </div>
                 </div>
+
               </nav>
             </div>
           </>
         )}
 
-        {/* CONTENIDO PRINCIPAL */}
-        <main className={showSidebar ? "pt-24 px-8" : ""}>
+        {/* CONTENIDO */}
+        <main className={showSidebar ? "pt-24 px-5 md:px-10" : ""}>
           {children}
         </main>
 
