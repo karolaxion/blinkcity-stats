@@ -5,7 +5,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-black text-white">
+      <body
+        className="text-white min-h-screen"
+        style={{
+          background:
+            "linear-gradient(180deg, #000000 0%, #111111 100%)",
+        }}
+      >
         {children}
       </body>
     </html>
