@@ -12,11 +12,12 @@ export async function GET() {
   const params = new URLSearchParams({
     response_type: "code",
     client_id: clientId!,
-    scope: scope,
+    scope,
     redirect_uri: redirectUri,
   });
 
-  const url = `https://accounts.spotify.com/authorize?${params.toString()}`;
+  const url =
+    "https://accounts.spotify.com/authorize?" + params.toString();
 
   return NextResponse.redirect(url);
 
