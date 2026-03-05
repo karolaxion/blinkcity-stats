@@ -3,16 +3,16 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function CallbackPage() {
 
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
 
-    const code = searchParams.get("code");
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
 
     if (!code) {
       router.push("/profile");
@@ -21,11 +21,17 @@ export default function CallbackPage() {
 
     async function connectSpotify() {
 
-      const res = await fetch(`/api/spotify/callback?code=${code}`);
+      try {
 
-      if (res.ok) {
-        router.push("/profile");
-      } else {
+        const res = await fetch(`/api/spotify/callback?code=${code}`);
+
+        if (res.ok) {
+          router.push("/profile");
+        } else {
+          router.push("/profile");
+        }
+
+      } catch (err) {
         router.push("/profile");
       }
 
@@ -40,4 +46,5 @@ export default function CallbackPage() {
       Conectando con Spotify...
     </div>
   );
+
 }
