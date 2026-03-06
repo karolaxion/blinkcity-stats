@@ -7,7 +7,12 @@ export async function GET(request: Request) {
 
   if (!code) {
     return NextResponse.redirect(
-      "https://blinkcity-stats.vercel.app/profile"
+      "https://blinkcity-stats.vercel.app"
     );
   }
+
+  return NextResponse.redirect(
+    "https://blinkcity-stats.vercel.app"
+  );
+
 }
