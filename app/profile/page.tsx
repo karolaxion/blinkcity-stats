@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 export default function ProfilePage() {
 
   const [user, setUser] = useState<any>(null);
-  const [profileData, setProfileData] = useState<any>(null);
   const [topSongs, setTopSongs] = useState<any[]>([]);
   const [topArtists, setTopArtists] = useState<any[]>([]);
 
@@ -64,24 +63,10 @@ export default function ProfilePage() {
         return;
       }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("username, lastfm_username, spotify_id")
-        .eq("id", authData.user.id)
-        .single();
-
-      const username = profile?.username || "Usuario";
-
       setUser({
         id: authData.user.id,
-        name: username
+        name: authData.user.email
       });
-
-      setProfileData(profile);
-
-      if (profile?.lastfm_username) {
-        await autoSyncLastFM(authData.user.id, profile.lastfm_username);
-      }
 
       const { data: streams } = await supabase
         .from("streams")
@@ -132,38 +117,6 @@ export default function ProfilePage() {
 
     await supabase.auth.signOut();
     router.push("/login");
-
-  };
-
-  const disconnectLastFM = async () => {
-
-    if (!user) return;
-
-    await supabase
-      .from("profiles")
-      .update({ lastfm_username: null })
-      .eq("id", user.id);
-
-    setProfileData({
-      ...profileData,
-      lastfm_username: null
-    });
-
-  };
-
-  const disconnectSpotify = async () => {
-
-    if (!user) return;
-
-    await supabase
-      .from("profiles")
-      .update({ spotify_id: null })
-      .eq("id", user.id);
-
-    setProfileData({
-      ...profileData,
-      spotify_id: null
-    });
 
   };
 
@@ -242,96 +195,12 @@ export default function ProfilePage() {
 
       </div>
 
-      <div className="border-t border-zinc-700 pt-10 mt-10">
-
-        <h2 className="text-xl font-bold mb-6">
-          Conexiones
-        </h2>
-
-        <div className="flex flex-col gap-4">
-
-          <div className="flex justify-between items-center bg-zinc-900 p-4 rounded-lg">
-
-            <span>Last.fm</span>
-
-            {profileData?.lastfm_username ? (
-
-              <div className="flex items-center gap-3">
-
-                <span className="text-green-400">
-                  Conectado ({profileData.lastfm_username})
-                </span>
-
-                <button
-                  onClick={disconnectLastFM}
-                  className="bg-zinc-700 px-3 py-1 rounded-lg"
-                >
-                  Desconectar
-                </button>
-
-              </div>
-
-            ) : (
-
-              <button
-                onClick={() => {
-                  window.location.href = "/api/lastfm/link";
-                }}
-                className="bg-red-600 px-4 py-2 rounded-lg"
-              >
-                Conectar Last.fm
-              </button>
-
-            )}
-
-          </div>
-
-          <div className="flex justify-between items-center bg-zinc-900 p-4 rounded-lg">
-
-            <span>Spotify</span>
-
-            {profileData?.spotify_id ? (
-
-              <div className="flex items-center gap-3">
-
-                <span className="text-green-400">
-                  Conectado
-                </span>
-
-                <button
-                  onClick={disconnectSpotify}
-                  className="bg-zinc-700 px-3 py-1 rounded-lg"
-                >
-                  Desconectar
-                </button>
-
-              </div>
-
-            ) : (
-
-              <button
-                onClick={() => {
-                  window.location.href = "/api/spotify/login";
-                }}
-                className="bg-green-600 px-4 py-2 rounded-lg"
-              >
-                Conectar Spotify
-              </button>
-
-            )}
-
-          </div>
-
-        </div>
-
-        <button
-          onClick={logout}
-          className="mt-8 bg-red-600 px-6 py-3 rounded-lg"
-        >
-          Cerrar sesión
-        </button>
-
-      </div>
+      <button
+        onClick={logout}
+        className="mt-8 bg-red-600 px-6 py-3 rounded-lg"
+      >
+        Cerrar sesión
+      </button>
 
     </div>
 
