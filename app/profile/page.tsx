@@ -59,7 +59,7 @@ export default function ProfilePage() {
       const { data: authData } = await supabase.auth.getUser();
 
       if (!authData.user) {
-        router.push("/login");
+        router.push("/");
         return;
       }
 
