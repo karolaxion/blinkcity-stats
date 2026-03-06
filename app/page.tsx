@@ -24,7 +24,9 @@ export default function HomePage() {
       <div className="flex flex-col gap-4 mt-4">
 
         <button
-          onClick={() => router.push("/api/spotify/login")}
+          onClick={() => {
+            window.location.href = "/api/spotify/login";
+          }}
           className="bg-green-500 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-green-600"
         >
           Conectar con Spotify
