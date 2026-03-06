@@ -10,9 +10,4 @@ export async function GET(request: Request) {
       "https://blinkcity-stats.vercel.app/profile"
     );
   }
-
-  return NextResponse.redirect(
-    "https://blinkcity-stats.vercel.app/profile"
-  );
-
 }
