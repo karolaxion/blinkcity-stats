@@ -25,6 +25,23 @@ export default function HomePage() {
 
         <button
           onClick={() => {
+
+            const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
+
+            const redirectUri =
+              "https://blinkcity-stats.vercel.app/api/spotify/callback";
+            
+            const scope = "user-read-recently-played";
+
+            const url =
+              "https://accounts.spotify.com/authorize?" +
+              new URLSearchParams({
+                response_type: "code",
+                client_id: clientId!,
+                scope,
+                redirect_uri: redirectUri,
+              }).toString();
+              
             window.location.href = "/api/spotify/login";
           }}
           className="bg-green-500 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-green-600"
