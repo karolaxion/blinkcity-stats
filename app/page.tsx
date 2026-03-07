@@ -1,10 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 export default function HomePage() {
-
-  const router = useRouter();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center text-white gap-6 text-center px-6">
@@ -30,7 +26,7 @@ export default function HomePage() {
 
             const redirectUri =
               "https://blinkcity-stats.vercel.app/api/spotify/callback";
-            
+
             const scope = "user-read-recently-played";
 
             const url =
@@ -41,19 +37,13 @@ export default function HomePage() {
                 scope,
                 redirect_uri: redirectUri,
               }).toString();
-              
-            window.location.href = "/api/spotify/login";
+
+            window.location.href = url;
+
           }}
           className="bg-green-500 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-green-600"
         >
           Conectar con Spotify
-        </button>
-
-        <button
-          onClick={() => router.push("/api/lastfm/link")}
-          className="bg-red-600 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-red-700"
-        >
-          Conectar con Last.fm
         </button>
 
       </div>
