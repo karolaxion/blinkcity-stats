@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -19,7 +21,6 @@ export default function CallbackPage() {
 
     console.log("Spotify code:", code);
 
-    // aquí luego procesaremos el login
     router.push("/profile");
 
   }, [params, router]);
