@@ -1,6 +1,7 @@
 "use client";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -8,27 +9,26 @@ import { useRouter, useSearchParams } from "next/navigation";
 export default function CallbackPage() {
 
   const router = useRouter();
-  const params = useSearchParams();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
 
-    const code = params.get("code");
+    const code = searchParams.get("code");
 
     if (!code) {
-      router.push("/");
+      router.replace("/");
       return;
     }
 
     console.log("Spotify code:", code);
 
-    router.push("/profile");
+    router.replace("/profile");
 
-  }, [params, router]);
+  }, [searchParams, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center text-white">
       Conectando con Spotify...
     </div>
   );
-
 }
