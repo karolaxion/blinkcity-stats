@@ -26,7 +26,7 @@ export default function HomePage() {
 
     console.log("Spotify URL:", url);
 
-    window.location.href = url;
+    window.open(url,"_self");
 
   };
 
