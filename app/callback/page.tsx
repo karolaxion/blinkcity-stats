@@ -1,7 +1,6 @@
 "use client";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,11 +8,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 export default function CallbackPage() {
 
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const params = useSearchParams();
 
   useEffect(() => {
 
-    const code = searchParams.get("code");
+    const code = params.get("code");
 
     if (!code) {
       router.replace("/");
@@ -24,7 +23,7 @@ export default function CallbackPage() {
 
     router.replace("/profile");
 
-  }, [searchParams, router]);
+  }, [params, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center text-white">
