@@ -13,14 +13,16 @@ export async function GET() {
     "https://accounts.spotify.com/authorize?" +
     new URLSearchParams({
       response_type: "code",
-      client_id: clientId || "MISSING_CLIENT_ID",
+      client_id: clientId!,
       scope,
       redirect_uri: redirectUri,
     }).toString();
 
-  return NextResponse.json({
-    clientId,
-    url
+  return new NextResponse(null, {
+    status: 302,
+    headers: {
+      Location: url,
+    },
   });
 
 }
