@@ -19,9 +19,10 @@ export default function CallbackPage() {
 
     console.log("Spotify code:", code);
 
+    // aquí luego procesaremos el login
     router.push("/profile");
 
-  }, []);
+  }, [params, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center text-white">
