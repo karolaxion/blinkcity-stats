@@ -1,72 +1,64 @@
-"use client";
+export default function Home() {
 
-import { useRouter } from "next/navigation";
-
-export default function HomePage() {
-
-  const router = useRouter();
-
-  const connectSpotify = () => {
-
-    const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
-
-    const redirectUri =
-      "https://blinkcity-stats.vercel.app/api/spotify/callback";
-
-    const scope = "user-read-recently-played";
-
-    const url =
-      "https://accounts.spotify.com/authorize?" +
-      new URLSearchParams({
-        response_type: "code",
-        client_id: clientId!,
-        scope,
-        redirect_uri: redirectUri,
-      }).toString();
-
-    console.log("Spotify URL:", url);
-
-    window.open(url,"_self");
-
-  };
+  const lastfmAuthUrl =
+    `https://www.last.fm/api/auth/?api_key=${process.env.NEXT_PUBLIC_LASTFM_API_KEY}`
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-white gap-6 text-center px-6">
 
-      <h1 className="text-4xl md:text-5xl font-bold">
-        BLINKCITY STATS 💗
-      </h1>
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "linear-gradient(180deg,#000,#1a1a1a)",
+        color: "white",
+        textAlign: "center"
+      }}
+    >
 
-      <p className="text-lg text-zinc-300">
-        Bienvenidos a Blinkcity Stats
-      </p>
+      <div>
 
-      <p className="text-sm text-zinc-400 max-w-md">
-        Esta aún es una versión demo. Algunas funciones pueden cambiar o mejorar en el futuro.
-      </p>
-
-      <div className="flex flex-col gap-4 mt-4">
-
-        {/* BOTON SPOTIFY */}
-
-        <button
-          onClick={connectSpotify}
-          className="bg-green-500 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-green-600"
+        <h1
+          style={{
+            fontSize: "56px",
+            color: "#ff2e93",
+            marginBottom: "10px"
+          }}
         >
-          Conectar con Spotify
-        </button>
+          BlinkCity
+        </h1>
 
-        {/* BOTON LASTFM */}
-
-        <button
-          onClick={() => router.push("/api/lastfm/link")}
-          className="bg-red-600 px-6 py-3 rounded-lg text-lg font-semibold hover:bg-red-700"
+        <p
+          style={{
+            fontSize: "18px",
+            opacity: 0.7,
+            marginBottom: "40px"
+          }}
         >
-          Conectar con Last.fm
-        </button>
+          Track BLACKPINK streams  
+          and compete with other fans
+        </p>
+
+        <a
+          href={lastfmAuthUrl}
+          style={{
+            background: "#ff2e93",
+            padding: "16px 40px",
+            borderRadius: "10px",
+            color: "white",
+            fontWeight: "bold",
+            textDecoration: "none",
+            fontSize: "18px",
+            boxShadow: "0 5px 20px rgba(255,46,147,0.5)"
+          }}
+        >
+          Connect with Last.fm
+        </a>
 
       </div>
 
-    </div>
-  );
+    </main>
+
+  )
 }

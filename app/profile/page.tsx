@@ -1,209 +1,320 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import PrivacyButton from "@/components/PrivacyButton"
+import SyncButton from "@/components/SyncButton"
+import { useEffect, useState } from "react"
 
 export default function ProfilePage() {
 
-  const [user, setUser] = useState<any>(null);
-  const [topSongs, setTopSongs] = useState<any[]>([]);
-  const [topArtists, setTopArtists] = useState<any[]>([]);
+  const [user,setUser] = useState<any>(null)
+  const [streams,setStreams] = useState<any[]>([])
+  const [isPublic,setIsPublic] = useState(true)
 
-  const router = useRouter();
+  async function loadProfile(){
 
-  async function autoSyncLastFM(userId: string, lastfmUsername: string) {
+    const res = await fetch("/api/profile")
+    const data = await res.json()
 
-    try {
+    setUser(data.user)
+    setStreams(data.streams)
 
-      const res = await fetch(`/api/lastfm/recent?username=${lastfmUsername}`);
-      const data = await res.json();
+  }
 
-      if (!data?.recenttracks?.track) return;
+  // sync automático (se mantiene)
+  async function sync(){
 
-      const tracks = data.recenttracks.track;
+    if(!user) return
 
-      for (const track of tracks) {
+    // 🔥 NUEVO: crear job en cola
+    await fetch("/api/create-sync-job", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username: user.lastfm_username
+      })
+    })
 
-        const artist = track.artist["#text"];
-        const song = track.name;
+    try{
+      await fetch(`/api/sync?username=${user.lastfm_username}`)
 
-        if (!track.date) continue;
-
-        const playedAt = new Date(
-          parseInt(track.date.uts) * 1000
-        ).toISOString();
-
-        await supabase.from("streams").insert({
-          internal_user_id: userId,
-          user_id: lastfmUsername,
-          user_display_name: lastfmUsername,
-          artist_name: artist,
-          track_name: song,
-          played_at: playedAt,
-          source: "lastfm"
-        });
-
+      if(streams.length === 0){
+        await loadProfile()
       }
 
-    } catch (err) {
-      console.log("LastFM sync error", err);
+    }catch(e){
+      console.error("Sync error", e)
     }
 
   }
 
-  useEffect(() => {
+  useEffect(()=>{
+    loadProfile()
+  },[])
 
-    const loadUser = async () => {
+  // ✅ FIX: evitar doble sync
+  useEffect(()=>{
 
-      const { data: authData } = await supabase.auth.getUser();
+    if(!user) return
 
-      if (!authData.user) {
-        router.push("/");
-        return;
+    if(streams.length === 0){
+      sync()
+    }
+
+  },[user])
+
+  // ✅ PASO 2
+  if(!user) return <div>Loading profile...</div>
+
+  if(user && streams.length === 0){
+    return <div>Importing your listening history...</div>
+  }
+
+  const songCounts:any = {}
+  const artistCounts:any = {}
+
+  const FANDOM_ARTISTS = [
+    "BLACKPINK",
+    "JENNIE",
+    "ROSÉ",
+    "JISOO",
+    "LISA"
+  ]
+
+  streams.forEach((s:any)=>{
+
+    let artistUpper = s.artist_name.toUpperCase()
+
+    if(artistUpper === "ROSE"){
+      artistUpper = "ROSÉ"
+    }
+
+    let fandomArtist:any = null
+
+    for(const artist of FANDOM_ARTISTS){
+
+      if(artistUpper.includes(artist)){
+        fandomArtist = artist
       }
 
-      setUser({
-        id: authData.user.id,
-        name: authData.user.email
-      });
+      if(artist === "ROSÉ" && artistUpper.includes("ROSE")){
+        fandomArtist = "ROSÉ"
+      }
 
-      const { data: streams } = await supabase
-        .from("streams")
-        .select("track_name, artist_name")
-        .eq("internal_user_id", authData.user.id);
+    }
 
-      if (!streams) return;
+    if(!fandomArtist) return
 
-      const songCounts: Record<string, number> = {};
-      const artistCounts: Record<string, number> = {};
+    const songKey = `${fandomArtist} — ${s.track_name}`
+    songCounts[songKey] = (songCounts[songKey]||0)+1
 
-      streams.forEach((row) => {
+    artistCounts[fandomArtist] = (artistCounts[fandomArtist]||0)+1
 
-        const key = `${row.track_name}|||${row.artist_name}`;
+  })
 
-        songCounts[key] = (songCounts[key] || 0) + 1;
-        artistCounts[row.artist_name] =
-          (artistCounts[row.artist_name] || 0) + 1;
+  const topSongs = Object.entries(songCounts)
+    .sort((a:any,b:any)=>b[1]-a[1])
+    .slice(0,10)
 
-      });
+  const topArtists = Object.entries(artistCounts)
+    .sort((a:any,b:any)=>b[1]-a[1])
+    .slice(0,10)
 
-      const sortedSongs = Object.entries(songCounts)
-        .map(([key, count]) => {
+  return(
 
-          const [song, artist] = key.split("|||");
+    <div style={{padding:"40px"}}>
 
-          return { song, artist, count };
+      {/* HEADER */}
 
-        })
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
-
-      const sortedArtists = Object.entries(artistCounts)
-        .map(([artist, count]) => ({ artist, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
-
-      setTopSongs(sortedSongs);
-      setTopArtists(sortedArtists);
-
-    };
-
-    loadUser();
-
-  }, []);
-
-  const logout = async () => {
-
-    await supabase.auth.signOut();
-    router.push("/login");
-
-  };
-
-  if (!user) return null;
-
-  return (
-
-    <div className="min-h-screen text-white p-5 md:p-10">
-
-      <div className="flex flex-col md:flex-row justify-between md:items-center mb-10 gap-4">
-
-        <h1 className="text-2xl md:text-3xl font-bold">
-          Perfil de {user.name} 💗
-        </h1>
-
-        <button
-          onClick={() => router.push("/")}
-          className="bg-pink-600 px-5 py-2 rounded-lg font-semibold hover:bg-pink-700"
-        >
-          Ir al Dashboard
-        </button>
-
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+      <div
+        style={{
+          display:"flex",
+          justifyContent:"space-between",
+          alignItems:"center"
+        }}
+      >
 
         <div>
 
-          <h2 className="text-lg md:text-xl font-semibold mb-4">
-            🎵 Tus Top 10 Canciones
-          </h2>
+          <h1 style={{margin:0}}>
+            {user.lastfm_username}
+          </h1>
 
-          {topSongs.map((item, index) => (
+          <p style={{opacity:.6}}>
+            {streams.length} Streams
+          </p>
 
-            <div
-              key={`${item.song}-${index}`}
-              className="bg-zinc-800 p-3 md:p-4 rounded-lg mb-2 flex justify-between"
-            >
+        </div>
 
-              <div>
+        <a
+          href="/ranking"
+          style={{
+            background:"#ff2e93",
+            padding:"10px 18px",
+            borderRadius:"8px",
+            color:"white",
+            textDecoration:"none",
+            fontWeight:"bold"
+          }}
+        >
+          View Ranking
+        </a>
 
-                <p>{index + 1}. {item.song}</p>
-                <p className="text-xs text-zinc-400">{item.artist}</p>
+      </div>
+
+      {/* TOPS */}
+
+      <div
+        style={{
+          display:"grid",
+          gridTemplateColumns:"1fr 1fr",
+          gap:"60px",
+          marginTop:"40px"
+        }}
+      >
+
+        <div>
+
+          <h2>Top Songs</h2>
+
+          {topSongs.map(([song,plays]:any,index:number)=>{
+
+            const stream = streams.find(
+              (s:any)=>`${s.artist_name.toUpperCase().includes("BLACKPINK") ? "BLACKPINK" : s.artist_name.toUpperCase()} — ${s.track_name}`===song
+            )
+
+            return(
+
+              <div
+                key={song}
+                style={{
+                  display:"flex",
+                  alignItems:"center",
+                  gap:"10px",
+                  background:"#111",
+                  padding:"12px",
+                  borderRadius:"12px",
+                  marginTop:"10px"
+                }}
+              >
+
+                <b>{index+1}</b>
+
+                {stream?.album_image &&(
+
+                  <img
+                    src={stream.album_image}
+                    width="50"
+                    height="50"
+                    style={{borderRadius:"6px"}}
+                  />
+
+                )}
+
+                <div>
+
+                  <div>{song}</div>
+
+                  <div style={{fontSize:"12px",opacity:.6}}>
+                    {plays} Streams
+                  </div>
+
+                </div>
 
               </div>
 
-              <span>🔥 {item.count}</span>
+            )
 
-            </div>
-
-          ))}
+          })}
 
         </div>
 
         <div>
 
-          <h2 className="text-lg md:text-xl font-semibold mb-4">
-            👑 Tus Top 5 Artistas
-          </h2>
+          <h2>Top Artists</h2>
 
-          {topArtists.map((item, index) => (
+          {topArtists.map(([artist,plays]:any,index:number)=>{
 
-            <div
-              key={`${item.artist}-${index}`}
-              className="bg-zinc-800 p-3 md:p-4 rounded-lg mb-2 flex justify-between"
-            >
+            const stream = streams.find(
+              (s:any)=>s.artist_name.toUpperCase().includes(artist)
+            )
 
-              <span>{index + 1}. {item.artist}</span>
-              <span>🎧 {item.count}</span>
+            return(
 
-            </div>
+              <div
+                key={artist}
+                style={{
+                  display:"flex",
+                  alignItems:"center",
+                  gap:"10px",
+                  background:"#111",
+                  padding:"12px",
+                  borderRadius:"12px",
+                  marginTop:"10px"
+                }}
+              >
 
-          ))}
+                <b>{index+1}</b>
+
+                {stream?.artist_image &&(
+
+                  <img
+                    src={stream.artist_image}
+                    width="50"
+                    height="50"
+                    style={{borderRadius:"50%"}}
+                  />
+
+                )}
+
+                <div>
+
+                  <div>{artist}</div>
+
+                  <div style={{fontSize:"12px",opacity:.6}}>
+                    {plays} Streams
+                  </div>
+
+                </div>
+
+              </div>
+
+            )
+
+          })}
 
         </div>
 
       </div>
 
-      <button
-        onClick={logout}
-        className="mt-8 bg-red-600 px-6 py-3 rounded-lg"
+      {/* BUTTONS */}
+
+      <div
+        style={{
+          marginTop:"30px",
+          display:"flex",
+          gap:"12px"
+        }}
       >
-        Cerrar sesión
-      </button>
+
+        <a
+          href="/"
+          style={{
+            padding:"10px 18px",
+            background:"#111",
+            color:"white",
+            borderRadius:"8px",
+            textDecoration:"none"
+          }}
+        >
+          Logout
+        </a>
+
+      </div>
 
     </div>
 
-  );
+  )
 
 }

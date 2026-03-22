@@ -1,62 +1,191 @@
-"use client";
+export const revalidate = 300
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase"
 
-export default function Ranking() {
-  const [ranking, setRanking] = useState<
-    { user: string; count: number }[]
-  >([]);
+const ARTISTS = [
+  "BLACKPINK",
+  "JENNIE",
+  "ROSÉ",
+  "JISOO",
+  "LISA"
+]
 
-  useEffect(() => {
-    const fetchRanking = async () => {
-      const { data, error } = await supabase
-        .from("streams")
-        .select("user_display_name");
+export default async function RankingPage() {
 
-      if (error) {
-        console.error("Error:", error);
-        return;
-      }
-
-      const counts: Record<string, number> = {};
-
-      data?.forEach((row) => {
-        const name = row.user_display_name || "Unknown";
-        counts[name] = (counts[name] || 0) + 1;
-      });
-
-      const sorted = Object.entries(counts)
-        .map(([user, count]) => ({ user, count }))
-        .sort((a, b) => b.count - a.count);
-
-      setRanking(sorted);
-    };
-
-    fetchRanking();
-  }, []);
+  const { data: streams } = await supabase
+    .from("streams")
+    .select(`
+      artist_name,
+      track_name,
+      album_image,
+      users (
+        lastfm_username
+      )
+    `)
 
   return (
-    <div className="min-h-screen bg-black text-white p-10">
-      <h1 className="text-4xl font-bold mb-8 text-center">
-        👑 Top Fans - BLINKCITY STATS
-      </h1>
 
-      <div className="max-w-2xl mx-auto space-y-4">
-        {ranking.map((item, index) => (
-          <div
-            key={item.user}
-            className="p-5 bg-zinc-800 rounded-xl flex justify-between items-center shadow-lg"
-          >
-            <span className="text-lg font-semibold">
-              {index + 1}. {item.user}
-            </span>
-            <span className="text-pink-400 font-bold">
-              🔥 {item.count} streams
-            </span>
+    <div>
+
+      <h1>Fandom Ranking</h1>
+
+      {ARTISTS.map((artist) => {
+
+        const artistStreams = streams?.filter(s =>
+          s.artist_name.toUpperCase().includes(artist)
+        )
+
+        const songCounts: Record<string, number> = {}
+        const userCounts: Record<string, number> = {}
+
+        artistStreams?.forEach((stream) => {
+
+          songCounts[stream.track_name] =
+            (songCounts[stream.track_name] || 0) + 1
+
+          const username = stream.users?.lastfm_username || "Unknown"
+
+          userCounts[username] =
+            (userCounts[username] || 0) + 1
+
+        })
+
+        const topSongs = Object.entries(songCounts)
+          .sort((a,b)=>b[1]-a[1])
+          .slice(0,5)
+
+        const topUsers = Object.entries(userCounts)
+          .sort((a,b)=>b[1]-a[1])
+          .slice(0,5)
+
+        return (
+
+          <div key={artist} style={{ marginTop: "60px" }}>
+
+            <h2>{artist}</h2>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "60px",
+                marginTop: "20px"
+              }}
+            >
+
+              {/* TOP SONGS */}
+
+              <div>
+
+                <h3>Top Songs</h3>
+
+                {topSongs.map(([song,plays],index)=>{
+
+                  const stream = artistStreams?.find(
+                    s=>s.track_name===song
+                  )
+
+                  return(
+
+                    <div
+                      key={song}
+                      style={{
+                        display:"flex",
+                        alignItems:"center",
+                        gap:"10px",
+                        background:"#111",
+                        padding:"10px",
+                        borderRadius:"8px",
+                        marginTop:"10px"
+                      }}
+                    >
+
+                      <b style={{ width:"20px" }}>
+                        {index+1}
+                      </b>
+
+                      {stream?.album_image && (
+
+                        <img
+                          src={stream.album_image}
+                          width="50"
+                          height="50"
+                          style={{ borderRadius:"6px" }}
+                        />
+
+                      )}
+
+                      <div>
+
+                        <div>{song}</div>
+
+                        <div style={{fontSize:"12px",opacity:.6}}>
+                          {plays} Streams
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  )
+
+                })}
+
+              </div>
+
+              {/* TOP FANS */}
+
+              <div>
+
+                <h3>Top Fans</h3>
+
+                {topUsers.map(([user,plays],index)=>{
+
+                  return(
+
+                    <div
+                      key={user}
+                      style={{
+                        background:"#111",
+                        padding:"10px",
+                        borderRadius:"8px",
+                        marginTop:"10px"
+                      }}
+                    >
+
+                      <b>{index+1}</b>{" "}
+
+                      <a
+                        href={`/user/${user}`}
+                        style={{
+                          color:"#ff2e93",
+                          textDecoration:"none",
+                          marginLeft:"5px"
+                        }}
+                      >
+                        {user}
+                      </a>
+
+                      {" — "}
+                      {plays} Streams
+
+                    </div>
+
+                  )
+
+                })}
+
+              </div>
+
+            </div>
+
           </div>
-        ))}
-      </div>
+
+        )
+
+      })}
+
     </div>
-  );
+
+  )
 }

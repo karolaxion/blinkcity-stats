@@ -1,67 +1,38 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { createClient } from "@supabase/supabase-js";
 
 export async function GET(request: Request) {
+
   const { searchParams } = new URL(request.url);
   const token = searchParams.get("token");
 
+  const apiKey = process.env.NEXT_PUBLIC_LASTFM_API_KEY!;
+  const secret = process.env.LASTFM_API_SECRET!;
+
   if (!token) {
-    return NextResponse.json({ error: "Token required" }, { status: 400 });
+    return NextResponse.json({ error: "no token" });
   }
 
-  const apiKey = process.env.NEXT_PUBLIC_LASTFM_API_KEY!;
-  const apiSecret = process.env.LASTFM_API_SECRET!;
+  const method = "auth.getSession";
 
-  const apiSig = crypto
+  const signature = crypto
     .createHash("md5")
-    .update(
-      `api_key${apiKey}methodauth.getSessiontoken${token}${apiSecret}`
-    )
+    .update(`api_key${apiKey}method${method}token${token}${secret}`)
     .digest("hex");
 
-  const url = `https://ws.audioscrobbler.com/2.0/?method=auth.getSession&api_key=${apiKey}&token=${token}&api_sig=${apiSig}&format=json`;
+  const url =
+    "https://ws.audioscrobbler.com/2.0/?" +
+    new URLSearchParams({
+      method: "auth.getSession",
+      api_key: apiKey,
+      token: token,
+      api_sig: signature,
+      format: "json"
+    });
 
-  const response = await fetch(url);
-  const data = await response.json();
+  const res = await fetch(url);
+  const data = await res.json();
 
-  if (!data.session) {
-    return NextResponse.json(
-      { error: "Failed to get session" },
-      { status: 400 }
-    );
-  }
+  return NextResponse.json(data);
 
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  // Obtener usuario autenticado desde cookies
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
-
-  const jwt = authHeader.replace("Bearer ", "");
-
-  const {
-    data: { user },
-  } = await supabaseAdmin.auth.getUser(jwt);
-
-  if (!user) {
-    return NextResponse.json({ error: "Invalid user" }, { status: 401 });
-  }
-
-  // 🔥 ACTUALIZA PROFILE DESDE BACKEND
-  await supabaseAdmin
-    .from("profiles")
-    .update({
-      lastfm_username: data.session.name,
-    })
-    .eq("id", user.id);
-
-  return NextResponse.json({
-    success: true,
-  });
 }
