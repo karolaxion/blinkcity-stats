@@ -1,6 +1,18 @@
 export const fandomCollaborations = [
 
   {
+    originalArtist: "DUA LIPA",
+    track: "KISS AND MAKE UP",
+    fandomArtist: "BLACKPINK"
+  },
+
+  {
+    originalArtist: "DUA LIPA",
+    track: "KISS AND MAKE UP (REMIX) [MIXED]",
+    fandomArtist: "BLACKPINK"
+  },
+
+  {
     originalArtist: "ZICO",
     track: "SPOT!",
     fandomArtist: "JENNIE"

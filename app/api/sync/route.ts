@@ -7,6 +7,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url)
   const username = searchParams.get("username")
+  const mode = searchParams.get("mode") // 👈 NUEVO
 
   if (!username) {
     return Response.json({ error: "username missing" })
@@ -37,9 +38,21 @@ export async function GET(request: Request) {
 
   let tracks: any[] = []
 
-  if (!isFirstSync) {
+  // 🔥 NUEVO: BOTÓN DE 100 SCROBBLES
+  if (mode === "100") {
 
-    // sync rápido (últimos scrobbles)
+    for (let page = 1; page <= 2; page++) {
+
+      const pageTracks = await getRecentTracks(username, page)
+
+      if (!pageTracks || pageTracks.length === 0) break
+
+      tracks = tracks.concat(pageTracks)
+    }
+
+  } else if (!isFirstSync) {
+
+    // sync rápido (últimos 50)
     tracks = await getRecentTracks(username, 1)
 
   } else {
@@ -99,10 +112,6 @@ export async function GET(request: Request) {
     if (existingPlayedAt.has(playedTimestamp)) {
       continue
     }
-
-    // ============================
-    // CACHE SPOTIFY
-    // ============================
 
     let albumName = null
     let albumImage = null

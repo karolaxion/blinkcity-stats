@@ -1,5 +1,6 @@
-export const revalidate = 300
+"use client"
 
+import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 
 const ARTISTS = [
@@ -10,35 +11,131 @@ const ARTISTS = [
   "LISA"
 ]
 
-export default async function RankingPage() {
+export default function RankingPage() {
 
-  const { data: streams } = await supabase
-    .from("streams")
-    .select(`
-      artist_name,
-      track_name,
-      album_image,
-      users (
-        lastfm_username
-      )
-    `)
+  const [streams,setStreams] = useState<any[]>([])
+  const [range,setRange] = useState<"all"|"today"|"yesterday"|"week"|"last_week"|"month"|"last_month">("all")
+
+  // 🔥 cargar data
+  async function loadData(){
+    const { data } = await supabase
+      .from("streams")
+      .select(`
+        artist_name,
+        track_name,
+        album_image,
+        played_at,
+        users (
+          lastfm_username
+        )
+      `)
+
+    setStreams(data || [])
+  }
+
+  useEffect(()=>{
+    loadData()
+  },[])
+
+  // ======================
+  // 🔥 FILTRO POR FECHA
+  // ======================
+
+  const now = new Date()
+
+  let startDate = new Date(0)
+  let endDate = new Date()
+
+  if(range === "today"){
+    startDate = new Date()
+    startDate.setHours(0,0,0,0)
+    endDate = new Date(startDate)
+    endDate.setDate(endDate.getDate()+1)
+  }
+
+  if(range === "yesterday"){
+    startDate = new Date()
+    startDate.setDate(startDate.getDate()-1)
+    startDate.setHours(0,0,0,0)
+    endDate = new Date(startDate)
+    endDate.setDate(endDate.getDate()+1)
+  }
+
+  if(range === "week"){
+    const day = now.getDay()
+    startDate = new Date(now)
+    startDate.setDate(now.getDate() - day)
+    startDate.setHours(0,0,0,0)
+    endDate = new Date()
+  }
+
+  if(range === "last_week"){
+    const day = now.getDay()
+    endDate = new Date(now)
+    endDate.setDate(now.getDate() - day)
+    endDate.setHours(0,0,0,0)
+    startDate = new Date(endDate)
+    startDate.setDate(startDate.getDate() - 7)
+  }
+
+  if(range === "month"){
+    startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+    endDate = new Date()
+  }
+
+  if(range === "last_month"){
+    startDate = new Date(now.getFullYear(), now.getMonth()-1, 1)
+    endDate = new Date(now.getFullYear(), now.getMonth(), 1)
+  }
+
+  const filteredStreams = streams.filter(s=>{
+    if(range === "all") return true
+    const date = new Date(s.played_at)
+    return date >= startDate && date < endDate
+  })
+
+  // ======================
 
   return (
 
-    <div>
+    <div style={{padding:"40px"}}>
 
       <h1>Fandom Ranking</h1>
 
+      {/* 🔥 BOTONES */}
+
+      <div style={{display:"flex",flexDirection:"column",gap:"8px",marginTop:"20px"}}>
+
+        <div style={{display:"flex",gap:"10px"}}>
+          <button onClick={()=>setRange("all")}>All</button>
+          <button onClick={()=>setRange("today")}>Today</button>
+          <button onClick={()=>setRange("yesterday")}>Yesterday</button>
+        </div>
+
+        <div style={{display:"flex",gap:"10px"}}>
+          <button onClick={()=>setRange("week")}>This Week</button>
+          <button onClick={()=>setRange("last_week")}>Last Week</button>
+        </div>
+
+        <div style={{display:"flex",gap:"10px"}}>
+          <button onClick={()=>setRange("month")}>This Month</button>
+          <button onClick={()=>setRange("last_month")}>Last Month</button>
+        </div>
+
+      </div>
+
+      {/* ====================== */}
+
       {ARTISTS.map((artist) => {
 
-        const artistStreams = streams?.filter(s =>
+        const artistStreams = filteredStreams.filter(s =>
           s.artist_name.toUpperCase().includes(artist)
         )
 
         const songCounts: Record<string, number> = {}
         const userCounts: Record<string, number> = {}
 
-        artistStreams?.forEach((stream) => {
+        artistStreams.forEach((stream) => {
 
           songCounts[stream.track_name] =
             (songCounts[stream.track_name] || 0) + 1
@@ -67,8 +164,8 @@ export default async function RankingPage() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "60px",
+                gridTemplateColumns:"1fr 1fr",
+                gap:"20px",
                 marginTop: "20px"
               }}
             >
@@ -81,7 +178,7 @@ export default async function RankingPage() {
 
                 {topSongs.map(([song,plays],index)=>{
 
-                  const stream = artistStreams?.find(
+                  const stream = artistStreams.find(
                     s=>s.track_name===song
                   )
 
@@ -155,16 +252,14 @@ export default async function RankingPage() {
 
                       <b>{index+1}</b>{" "}
 
-                      <a
-                        href={`/user/${user}`}
+                      <span
                         style={{
                           color:"#ff2e93",
-                          textDecoration:"none",
                           marginLeft:"5px"
                         }}
                       >
                         {user}
-                      </a>
+                      </span>
 
                       {" — "}
                       {plays} Streams

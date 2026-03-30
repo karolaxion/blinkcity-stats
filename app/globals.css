@@ -20,3 +20,17 @@ body {
   background: #ff1493;
   border-radius: 10px;
 }
+
+/* 🔥 RESPONSIVE GRID (MEJOR SOLUCIÓN) */
+
+.grid-responsive {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 60px;
+}
+
+@media (min-width: 768px) {
+  .grid-responsive {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
