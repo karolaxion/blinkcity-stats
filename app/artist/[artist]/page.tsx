@@ -39,7 +39,8 @@ export default function ArtistPage() {
     const allStreams = data || []
     setStreams(allStreams)
 
-    const artistId = spotifyArtists[artistName]?.id
+    const artistKey = artistName as keyof typeof spotifyArtists
+    const artistId = spotifyArtists[artistKey]?.id
 
     let img = null
 
