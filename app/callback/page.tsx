@@ -1,6 +1,8 @@
 "use client";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -27,13 +29,10 @@ export default function CallbackPage() {
       if (data.access_token) {
 
         localStorage.setItem("spotify_token", data.access_token);
-
         router.push("/profile");
 
       } else {
-
         router.push("/");
-
       }
 
     }
