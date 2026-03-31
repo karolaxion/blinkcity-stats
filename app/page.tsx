@@ -37,7 +37,7 @@ export default function Home() {
           }}
         >
           Track BLACKPINK streams  
-          and compete with other fans
+          and this is a beta and test version
         </p>
 
         <a
