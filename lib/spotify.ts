@@ -1,7 +1,15 @@
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID!
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET!
 
+let cachedToken: string | null = null
+let tokenExpires = 0
+
 async function getAccessToken() {
+
+  // 🔥 usar token cacheado si aún sirve
+  if (cachedToken && Date.now() < tokenExpires) {
+    return cachedToken
+  }
 
   const auth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64")
 
@@ -16,12 +24,22 @@ async function getAccessToken() {
 
   const data = await res.json()
 
-  return data.access_token
+  if (!data.access_token) {
+    console.error("SPOTIFY TOKEN ERROR:", data)
+    return null
+  }
+
+  // 🔥 guardar token en memoria (1 hora)
+  cachedToken = data.access_token
+  tokenExpires = Date.now() + (data.expires_in - 60) * 1000
+
+  return cachedToken
 }
 
 export async function searchTrack(track: string, artist: string) {
 
   const token = await getAccessToken()
+  if (!token) return null
 
   const query = encodeURIComponent(`track:${track} artist:${artist}`)
 
@@ -41,7 +59,7 @@ export async function searchTrack(track: string, artist: string) {
   if (!item) return null
 
   return {
-    id: item.id, // ← agregado para guardar spotify_track_id
+    id: item.id,
     albumImage: item.album.images?.[0]?.url || null,
     albumName: item.album.name,
   }
@@ -50,6 +68,7 @@ export async function searchTrack(track: string, artist: string) {
 export async function getArtistImage(artist: string) {
 
   const token = await getAccessToken()
+  if (!token) return null
 
   const query = encodeURIComponent(artist)
 
