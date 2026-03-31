@@ -138,6 +138,20 @@ export default function RootLayout({
           {children}
         </main>
 
+        {/* 🔥 FOOTER NUEVO */}
+
+        <footer
+          style={{
+            marginTop:"60px",
+            padding:"20px",
+            textAlign:"center",
+            fontSize:"12px",
+            opacity:0.5
+          }}
+        >
+          Music data powered by Last.fm
+        </footer>
+
       </body>
     </html>
   )
