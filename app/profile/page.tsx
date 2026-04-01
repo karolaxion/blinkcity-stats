@@ -1,11 +1,16 @@
 "use client"
 
 export const dynamic = "force-dynamic"
+export const fetchCache = "force-no-store"
 
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 
 export default function ProfilePage() {
+  
+  if (typeof window === "underfined") {
+    return null
+  }
 
   const params = useSearchParams()
   const username = params?.get("username") || null
