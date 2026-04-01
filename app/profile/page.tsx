@@ -8,7 +8,10 @@ import { useSearchParams } from "next/navigation"
 export default function ProfilePage() {
 
   const params = useSearchParams()
-  const username = params.get("username")
+  const username = params?.get("username") || null
+
+  if(!username) return
+    return <div> Loading...</div>
   
   const [user,setUser] = useState<any>(null)
   const [streams,setStreams] = useState<any[]>([])
