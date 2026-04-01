@@ -13,7 +13,14 @@ export default function ProfilePage() {
   }
 
   const params = useSearchParams()
-  const username = params.get("username")
+  
+  const usernameFromUrl = params.get("username")
+  const usernameFromStorage =
+    typeof window !== "undefined"
+    ? localStorage.getItem("lastfm_user")
+    : null
+
+  const username = usernameFromUrl || usernameFromStorage
 
   const [user,setUser] = useState<any>(null)
   const [streams,setStreams] = useState<any[]>([])
@@ -34,7 +41,7 @@ export default function ProfilePage() {
 
     useEffect(() => {
     if (username) {
-      loadProfile()
+      localStorage.setItem("lastfm_user", username)
     }
   }, [username])
     
