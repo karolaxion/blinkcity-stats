@@ -1,5 +1,7 @@
 "use client"
 
+export const dynamic = "force-dynamic"
+
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 
@@ -17,7 +19,7 @@ export default function ProfilePage() {
   async function loadProfile(){
     
     if(!user) return
-    
+
     const res = await fetch(`/api/profile?username=${username}`)
     const data = await res.json()
     setUser(data.user)
