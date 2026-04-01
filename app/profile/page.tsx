@@ -1,9 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 
 export default function ProfilePage() {
 
+  const params = useSearchParams()
+  const username = params.get("username")
+  
   const [user,setUser] = useState<any>(null)
   const [streams,setStreams] = useState<any[]>([])
 
@@ -11,7 +15,10 @@ export default function ProfilePage() {
   const [range,setRange] = useState<"today"|"yesterday"|"week"|"last_week"|"month"|"last_month"|"all">("today")
 
   async function loadProfile(){
-    const res = await fetch("/api/profile")
+    
+    if(!user) return
+    
+    const res = await fetch(`/api/profile?username=${username}`)
     const data = await res.json()
     setUser(data.user)
     setStreams(data.streams)
@@ -61,23 +68,10 @@ export default function ProfilePage() {
   }
 
   // ======================
-  // 🔥 NUEVO: MESES DINÁMICOS
-  // ======================
-
-  const now = new Date()
-
-  const monthNames = [
-  "January","February","March","April","May","June",
-    "July","August","September","October","November","December"]
-  
-  const currentMonth = monthNames [now.getMonth()]
-  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() -1, 1)
-  const lastMonth = monthNames[lastMonthDate.getMonth()]  
-  
-  // ======================
   // MODAL LOGIC (FIXED)
   // ======================
 
+  const now = new Date()
   let startDate = new Date(0)
   let endDate = new Date()
 

@@ -34,5 +34,5 @@ export default async function LastfmCallback({
 
   }
 
-  redirect("/profile")
+  redirect(`/profile?username=${username}`)
 }
