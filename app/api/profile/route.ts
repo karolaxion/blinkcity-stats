@@ -1,12 +1,21 @@
 import { supabase } from "@/lib/supabase"
 
-export async function GET() {
+export async function GET(request: Request) {
+
+  const { searchParams } = new URL(request.url)
+  const username = searchParams.get("username")
+
+  if (!username) {
+    return Response.json({
+      user: null,
+      streams: []
+    })
+  }
 
   const { data: user } = await supabase
     .from("users")
     .select("*")
-    .order("created_at", { ascending: false })
-    .limit(1)
+    .ilike("lastfm_username", username)
     .single()
 
   if (!user) {
