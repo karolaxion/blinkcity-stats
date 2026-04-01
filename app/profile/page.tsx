@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation"
 
 export default function ProfilePage() {
   
-  if (typeof window === "underfined") {
+  if (typeof window === "undefined") {
     return null
   }
 
