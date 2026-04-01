@@ -13,11 +13,8 @@ export default function ProfilePage() {
   }
 
   const params = useSearchParams()
-  const username = params?.get("username") || null
+  const username = params.get("username")
 
-  if(!username) return
-    return <div> Loading...</div>
-  
   const [user,setUser] = useState<any>(null)
   const [streams,setStreams] = useState<any[]>([])
 
@@ -26,14 +23,21 @@ export default function ProfilePage() {
 
   async function loadProfile(){
     
-    if(!user) return
+    if(!username) return
 
     const res = await fetch(`/api/profile?username=${username}`)
     const data = await res.json()
+    
     setUser(data.user)
     setStreams(data.streams)
   }
 
+    useEffect(() => {
+    if (username) {
+      loadProfile()
+    }
+  }, [username])
+    
   async function sync(){
     if(!user) return
 
@@ -63,8 +67,6 @@ export default function ProfilePage() {
     }
   }
 
-  useEffect(()=>{ loadProfile() },[])
-
   useEffect(()=>{
     if(!user) return
     if(streams.length === 0){
@@ -72,6 +74,7 @@ export default function ProfilePage() {
     }
   },[user])
 
+  if (!username) return <div>Loading...</div>
   if(!user) return <div>Loading profile...</div>
   if(user && streams.length === 0){
     return <div>Importing your listening history...</div>
