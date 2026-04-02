@@ -72,82 +72,81 @@ export default function RankingPage() {
   // ======================
 
   async function loadData() {
-    let allData: any[] = []
-    let from = 0
-    let to = 999
+  let allData: any[] = []
+  let from = 0
+  let to = 999
 
-    while (true) {
-      const { data } = await supabase
-        .from("streams")
-        .select(`
-          artist_name,
-          track_name,
-          album_image,
-          played_at,
-          users (
-            lastfm_username
-          )
-        `)
-        .range(from, to)
+  while (true) {
+    const { data } = await supabase
+      .from("streams")
+      .select(`
+        artist_name,
+        track_name,
+        album_image,
+        played_at,
+        users (
+          lastfm_username
+        )
+      `)
+      .range(from, to)
 
-      if (!data || data.length === 0) break
+    if (!data || data.length === 0) break
 
-      allData = [...allData, ...data]
+    allData = [...allData, ...data]
 
-      from += 1000
-      to += 1000
+    from += 1000
+    to += 1000
+  }
+
+  setStreams(allData)
+
+  // ======================
+  // 🔥 guardar ranking POR DÍA
+  // ======================
+
+  const today = new Date().toISOString().split("T")[0]
+
+  for (const artist of ARTISTS) {
+
+    const artistStreams = allData.filter(s =>
+      s.artist_name.toUpperCase().includes(artist)
+    )
+
+    const songCounts: Record<string, number> = {}
+    const userCounts: Record<string, number> = {}
+
+    artistStreams.forEach((stream) => {
+
+      songCounts[stream.track_name] =
+        (songCounts[stream.track_name] || 0) + 1
+
+      const username = stream.users?.lastfm_username
+      if (!username) return
+
+      userCounts[username] =
+        (userCounts[username] || 0) + 1
+
+    })
+
+    for (const [song, plays] of Object.entries(songCounts)) {
+      await supabase.from("ranking_songs").upsert({
+        artist,
+        track_name: song,
+        date: today,
+        total_streams: plays
+      })
     }
 
-    setStreams(allData)
+    for (const [user, plays] of Object.entries(userCounts)) {
+      await supabase.from("ranking_users").upsert({
+        artist,
+        username: user,
+        date: today,
+        total_streams: plays
+      })
+    }
 
-// ======================
-// 🔥 NUEVO: guardar ranking POR DÍA
-// ======================
-
-const today = new Date().toISOString().split("T")[0]
-
-for (const artist of ARTISTS) {
-
-  const artistStreams = allData.filter(s =>
-    s.artist_name.toUpperCase().includes(artist)
-  )
-
-  const songCounts: Record<string, number> = {}
-  const userCounts: Record<string, number> = {}
-
-  artistStreams.forEach((stream) => {
-
-    songCounts[stream.track_name] =
-      (songCounts[stream.track_name] || 0) + 1
-
-    const username = stream.users?.lastfm_username
-    if (!username) return
-
-    userCounts[username] =
-      (userCounts[username] || 0) + 1
-
-  })
-
-  // 🔥 canciones
-  for (const [song, plays] of Object.entries(songCounts)) {
-    await supabase.from("ranking_songs").upsert({
-      artist,
-      track_name: song,
-      date: today,
-      total_streams: plays
-    })
   }
-
-  // 🔥 usuarios
-  for (const [user, plays] of Object.entries(userCounts)) {
-    await supabase.from("ranking_users").upsert({
-      artist,
-      username: user,
-      date: today,
-      total_streams: plays
-    })
-  }
-
 }
 
   useEffect(() => {
