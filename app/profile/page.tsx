@@ -4,89 +4,63 @@ export const dynamic = "force-dynamic"
 export const fetchCache = "force-no-store"
 
 import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
-import { useRouter } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
 export default function ProfilePage() {
-  
-  if (typeof window === "undefined") {
-    return null
-  }
+  if (typeof window === "undefined") return null
 
   const params = useSearchParams()
-  
   const usernameFromUrl = params.get("username")
-  const usernameFromStorage =
-    typeof window !== "undefined"
-    ? localStorage.getItem("lastfm_user")
-    : null
-
+  const usernameFromStorage = localStorage.getItem("lastfm_user")
   const username = usernameFromUrl || usernameFromStorage
   const router = useRouter()
 
-  const [user,setUser] = useState<any>(null)
-  const [streams,setStreams] = useState<any[]>([])
-  const [stats, setStats] = useState<any>(null)
-
-  const [modalOpen,setModalOpen] = useState(false)
-  const [range,setRange] = useState<"today"|"yesterday"|"week"|"last_week"|"month"|"last_month"|"all">("today")
+  const [user, setUser] = useState<any>(null)
+  const [streams, setStreams] = useState<any[]>([])
+  const [modalOpen, setModalOpen] = useState(false)
+  const [range, setRange] = useState<"today"|"yesterday"|"week"|"last_week"|"month"|"last_month"|"all">("today")
 
   async function loadProfile() {
     if (!username) return
-    const { data: user } = await supabase.from("users").select("*").eq("lastfm_username", username).single()
-    if (!user) return
-    setUser(user)
+    const { data: userData } = await supabase.from("users").select("*").eq("lastfm_username", username).single()
+    if (!userData) return
 
-    // cargar cache de stats
-    const { data: cached } = await supabase
-      .from("user_stats")
+    setUser(userData)
+
+    const { data: userStreams } = await supabase
+      .from("streams")
       .select("*")
-      .eq("user_id", user.id)
-      .single()
+      .eq("user_id", userData.id)
+      .order("played_at", { ascending: false })
 
-    if (cached) {
-      setStats(cached)
-      setStreams(cached.streams ?? []) // opcional, según estructura
-    }
-
-    sync() // actualizar en segundo plano
+    setStreams(userStreams ?? [])
+    sync() // second stage background
   }
 
   async function sync() {
     if (!user) return
-    await sync100()
-    const newTotals = calculateTotals(streams) // <- pasa streams
-    await supabase.from("user_stats").upsert({
-      user_id: user.id,
-      ...newTotals
-    })
-    setStats(newTotals)
+    await fetch(`/api/sync?username=${user.lastfm_username}&mode=100`)
+    const { data: userStreams } = await supabase
+      .from("streams")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("played_at", { ascending: false })
+    setStreams(userStreams ?? [])
   }
 
   async function sync100() {
     if (!user) return
-    try {
-      await fetch(`/api/sync?username=${user.lastfm_username}&mode=100`)
-      // no loadProfile() aquí
-      await sync() // o si prefieres solo recargar streams en local
-    } catch (e) {
-      console.error("Sync100 error", e)
-    }
+    await sync()
   }
 
-  useEffect(()=>{
-    if(!user) return
-    if(streams.length === 0){
-      sync()
-    }
-  },[user])
+  useEffect(() => {
+    if (!username) return
+    loadProfile()
+  }, [username])
 
   if (!username) return <div>Loading...</div>
-  if(!user) return <div>Loading profile...</div>
-  if(user && streams.length === 0){
-    return <div>Actualizando datos en segundo plano... Esto puede tardar unos minutos.</div>
-  }
+  if (!user) return <div>Loading profile...</div>
 
   // ======================
   // MODAL LOGIC (FIXED)
