@@ -65,7 +65,7 @@ export default function ArtistPage() {
 
     if (!img) {
       img =
-        allStreams.find((s:any)=>
+        allData.find((s:any)=>
           s.artist_name.toUpperCase().includes(normalizedArtist)
         )?.artist_image || null
     }
