@@ -5,6 +5,7 @@ export const fetchCache = "force-no-store"
 
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 export default function ProfilePage() {
   
@@ -21,6 +22,7 @@ export default function ProfilePage() {
     : null
 
   const username = usernameFromUrl || usernameFromStorage
+  const router = useRouter()
 
   const [user,setUser] = useState<any>(null)
   const [streams,setStreams] = useState<any[]>([])
@@ -40,11 +42,15 @@ export default function ProfilePage() {
   }
 
     useEffect(() => {
+    if (username && !usernameFromUrl && usernameFromStorage) {
+      // Actualiza la URL para incluir ?username= si viene de localStorage
+      router.replace(`/profile?username=${username}`)
+    }
     if (username && !user) {
       loadProfile();
     }
-  }, [username, user])
-
+  }, [username, user, usernameFromUrl, usernameFromStorage, router])
+    
   async function sync(){
     if(!user) return
 
