@@ -16,6 +16,13 @@ export default function ProfilePage() {
   const username = usernameFromUrl || usernameFromStorage
   const router = useRouter()
 
+  // 🔥 FIX: restaurar username en la URL
+useEffect(() => {
+  if (!usernameFromUrl && usernameFromStorage) {
+    router.replace(`/profile?username=${usernameFromStorage}`)
+  }
+}, [usernameFromUrl])
+
   const [user, setUser] = useState<any>(null)
   const [streams, setStreams] = useState<any[]>([])
   const [modalOpen, setModalOpen] = useState(false)
