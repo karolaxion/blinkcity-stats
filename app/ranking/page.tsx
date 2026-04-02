@@ -99,19 +99,23 @@ export default function RankingPage() {
   // ======================
 
   return (
-
     <div style={{padding:"40px"}}>
-
       <h1>Fandom Ranking</h1>
 
       {/* 🔥 BOTONES */}
-
       <div style={{display:"flex",flexDirection:"column",gap:"8px",marginTop:"20px"}}>
-
         <div style={{display:"flex",gap:"10px"}}>
           <button onClick={()=>setRange("all")}>All</button>
           <button onClick={()=>setRange("today")}>Today</button>
           <button onClick={()=>setRange("yesterday")}>Yesterday</button>
+          <button onClick={loadData} style={{
+            background: "#ff2e93",
+            color: "white",
+            border: "none",
+            padding: "8px 16px",
+            borderRadius: "4px",
+            cursor: "pointer"
+          }}>Refresh Ranking</button>
         </div>
 
         <div style={{display:"flex",gap:"10px"}}>
@@ -123,7 +127,6 @@ export default function RankingPage() {
           <button onClick={()=>setRange("month")}>This Month</button>
           <button onClick={()=>setRange("last_month")}>Last Month</button>
         </div>
-
       </div>
 
       {/* ====================== */}
@@ -283,6 +286,5 @@ export default function RankingPage() {
       })}
 
     </div>
-
   )
 }
