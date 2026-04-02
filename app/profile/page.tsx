@@ -56,15 +56,12 @@ export default function ProfilePage() {
   async function sync() {
     if (!user) return
     await sync100()
-    // recalcular totales y guardar en user_stats
-    const newTotals = await calculateTotals(user.id)
+    const newTotals = calculateTotals(user.id)
     await supabase.from("user_stats").upsert({
       user_id: user.id,
-      ...newTotals,
-      updated_at: new Date().toISOString()
+      ...newTotals
     })
     setStats(newTotals)
-    // setStreams(...) según lo que uses
   }
 
   async function sync100(){
@@ -530,4 +527,26 @@ export default function ProfilePage() {
 
     </div>
   )
+}
+
+function calculateTotals(userId: string) {
+  const totalStreams = streams.length
+  const uniqueArtists = new Set(streams.map((s:any) => s.artist_name)).size
+
+  const artistCounts:any = {}
+  streams.forEach((s:any) => {
+    const artist = (s.artist_name ?? "").toUpperCase()
+    if (!artist) return
+    artistCounts[artist] = (artistCounts[artist] || 0) + 1
+  })
+
+  const [topArtist] = Object.entries(artistCounts)
+    .sort((a:any,b:any)=> b[1]-a[1])
+
+  return {
+    total_streams: totalStreams,
+    unique_artists: uniqueArtists,
+    top_artist: topArtist ? topArtist[0] : null,
+    updated_at: new Date().toISOString()
+  }
 }
