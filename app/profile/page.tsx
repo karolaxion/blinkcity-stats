@@ -21,30 +21,6 @@ export default function ProfilePage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [range, setRange] = useState<"today"|"yesterday"|"week"|"last_week"|"month"|"last_month"|"all">("today")
 
-  // 🔥 NUEVO: función para guardar stats
-  async function updateUserStats(userId: string, streams: any[]) {
-    if (!streams.length) return
-
-    const totalStreams = streams.length
-
-    const artistCount: Record<string, number> = {}
-
-    streams.forEach((s) => {
-      const artist = s.artist_name?.toUpperCase() || "UNKNOWN"
-      artistCount[artist] = (artistCount[artist] || 0) + 1
-    })
-
-    const topArtist = Object.entries(artistCount)
-      .sort((a, b) => b[1] - a[1])[0]?.[0] || null
-
-    await supabase.from("user_stats").upsert({
-      user_id: userId,
-      total_streams: totalStreams,
-      top_artist: topArtist,
-      updated_at: new Date().toISOString()
-    })
-  }
-
   async function loadProfile() {
     if (!username) return
     const { data: userData } = await supabase.from("users").select("*").eq("lastfm_username", username).single()
@@ -58,12 +34,7 @@ export default function ProfilePage() {
       .eq("user_id", userData.id)
       .order("played_at", { ascending: false })
 
-    const safeStreams = userStreams ?? []
-    setStreams(safeStreams)
-
-    // 🔥 NUEVO: guardar stats
-    await updateUserStats(userData.id, safeStreams)
-
+    setStreams(userStreams ?? [])
     sync() // second stage background
   }
 
@@ -75,12 +46,7 @@ export default function ProfilePage() {
       .select("*")
       .eq("user_id", user.id)
       .order("played_at", { ascending: false })
-
-    const safeStreams = userStreams ?? []
-    setStreams(safeStreams)
-
-    // 🔥 NUEVO: actualizar stats después del sync
-    await updateUserStats(user.id, safeStreams)
+    setStreams(userStreams ?? [])
   }
 
   async function sync100() {
@@ -95,7 +61,7 @@ export default function ProfilePage() {
 
   if (!username) return <div>Loading...</div>
   if (!user) return <div>Loading profile...</div>
-  
+
   // ======================
   // MODAL LOGIC (FIXED)
   // ======================
