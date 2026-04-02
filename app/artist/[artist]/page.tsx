@@ -31,15 +31,28 @@ export default function ArtistPage() {
 
   async function loadData(){
 
+  let allData: any[] = []
+  let from = 0
+  let to = 999
+
+  while (true) {
     const { data } = await supabase
       .from("streams")
       .select(`
         *,
         users ( lastfm_username )
       `)
+      .range(from, to)
 
-    const allStreams = data || []
-    setStreams(allStreams)
+    if (!data || data.length === 0) break
+
+    allData = [...allData, ...data]
+
+    from += 1000
+    to += 1000
+  }
+
+  setStreams(allData)
 
     const artistKey = artistName as keyof typeof spotifyArtists
     const artistId = spotifyArtists[artistKey]?.id
@@ -164,7 +177,9 @@ export default function ArtistPage() {
     songCounts[stream.track_name] =
       (songCounts[stream.track_name] || 0) + 1
 
-    const username = stream.users?.lastfm_username || "Unknown"
+    const username = stream.users?.lastfm_username
+
+    if (!username) return
 
     userCounts[username] =
       (userCounts[username] || 0) + 1
@@ -177,7 +192,7 @@ export default function ArtistPage() {
 
   const topUsers = Object.entries(userCounts)
     .sort((a,b)=>b[1]-a[1])
-    .slice(0,10)
+    .slice(0,20)
 
   // ======================
 
