@@ -139,7 +139,8 @@ export default function RankingPage() {
           songCounts[stream.track_name] =
             (songCounts[stream.track_name] || 0) + 1
 
-          const username = stream.users?.lastfm_username || "Unknown"
+          const username = stream.users?.lastfm_username
+          if (!username) return // 👈 ignora streams sin usuario
 
           userCounts[username] =
             (userCounts[username] || 0) + 1
