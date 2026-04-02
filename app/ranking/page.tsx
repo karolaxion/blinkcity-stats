@@ -35,9 +35,11 @@ export default function RankingPage() {
     setStreams(data || [])
   }
 
-  useEffect(()=>{
-    loadData()
-  },[])
+  useEffect(() => {
+    loadData(); // Carga inicial
+    const interval = setInterval(loadData, 10 * 60 * 1000); // 10 minutos
+    return () => clearInterval(interval); // Limpia al desmontar
+  }, []);
 
   // ======================
   // 🔥 FILTRO POR FECHA
