@@ -110,14 +110,6 @@ export default function RankingPage() {
           <button onClick={()=>setRange("all")}>All</button>
           <button onClick={()=>setRange("today")}>Today</button>
           <button onClick={()=>setRange("yesterday")}>Yesterday</button>
-          <button onClick={loadData} style={{
-            background: "#ff2e93",
-            color: "white",
-            border: "none",
-            padding: "8px 16px",
-            borderRadius: "4px",
-            cursor: "pointer"
-          }}>Refresh Ranking</button>
         </div>
 
         <div style={{display:"flex",gap:"10px"}}>
