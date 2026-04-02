@@ -19,7 +19,12 @@ export default function RankingPage() {
   const [range,setRange] = useState<"all"|"today"|"yesterday"|"week"|"last_week"|"month"|"last_month">("all")
 
   // 🔥 cargar data
-  async function loadData(){
+  async function loadData() {
+  let allData: any[] = []
+  let from = 0
+  let to = 999
+
+  while (true) {
     const { data } = await supabase
       .from("streams")
       .select(`
@@ -31,10 +36,18 @@ export default function RankingPage() {
           lastfm_username
         )
       `)
+      .range(from, to)
 
-    setStreams(data || [])
-    console.log("STREAMS:", data)
+    if (!data || data.length === 0) break
+
+    allData = [...allData, ...data]
+
+    from += 1000
+    to += 1000
   }
+
+  setStreams(allData)
+}
 
   useEffect(() => {
     loadData(); // Carga inicial
