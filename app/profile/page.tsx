@@ -56,7 +56,7 @@ export default function ProfilePage() {
   async function sync() {
     if (!user) return
     await sync100()
-    const newTotals = calculateTotals(user.id)
+    const newTotals = calculateTotals(streams) // <- pasa streams
     await supabase.from("user_stats").upsert({
       user_id: user.id,
       ...newTotals
@@ -529,9 +529,9 @@ export default function ProfilePage() {
   )
 }
 
-function calculateTotals(userId: string) {
+function calculateTotals(streams: any[]) {
   const totalStreams = streams.length
-  const uniqueArtists = new Set(streams.map((s:any) => s.artist_name)).size
+  const uniqueArtists = new Set(streams.map((s:any)=>s.artist_name)).size
 
   const artistCounts:any = {}
   streams.forEach((s:any) => {
