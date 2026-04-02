@@ -6,6 +6,7 @@ export const fetchCache = "force-no-store"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
 
 export default function ProfilePage() {
   
@@ -26,48 +27,44 @@ export default function ProfilePage() {
 
   const [user,setUser] = useState<any>(null)
   const [streams,setStreams] = useState<any[]>([])
+  const [stats, setStats] = useState<any>(null)
 
   const [modalOpen,setModalOpen] = useState(false)
   const [range,setRange] = useState<"today"|"yesterday"|"week"|"last_week"|"month"|"last_month"|"all">("today")
 
-  async function loadProfile(){
-    
-    if(!username) return
+  async function loadProfile() {
+    if (!username) return
+    const { data: user } = await supabase.from("users").select("*").eq("lastfm_username", username).single()
+    if (!user) return
+    setUser(user)
 
-    const res = await fetch(`/api/profile?username=${username}`)
-    const data = await res.json()
-    
-    setUser(data.user)
-    setStreams(data.streams)
+    // cargar cache de stats
+    const { data: cached } = await supabase
+      .from("user_stats")
+      .select("*")
+      .eq("user_id", user.id)
+      .single()
+
+    if (cached) {
+      setStats(cached)
+      setStreams(cached.streams ?? []) // opcional, según estructura
+    }
+
+    sync() // actualizar en segundo plano
   }
 
-    useEffect(() => {
-    if (username && !usernameFromUrl && usernameFromStorage) {
-      // Actualiza la URL para incluir ?username= si viene de localStorage
-      router.replace(`/profile?username=${username}`)
-    }
-    if (username && !user) {
-      loadProfile();
-    }
-  }, [username, user, usernameFromUrl, usernameFromStorage, router])
-    
-  async function sync(){
-    if(!user) return
-
-    await fetch("/api/create-sync-job",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ username:user.lastfm_username })
+  async function sync() {
+    if (!user) return
+    await sync100()
+    // recalcular totales y guardar en user_stats
+    const newTotals = await calculateTotals(user.id)
+    await supabase.from("user_stats").upsert({
+      user_id: user.id,
+      ...newTotals,
+      updated_at: new Date().toISOString()
     })
-
-    try{
-      await fetch(`/api/sync?username=${user.lastfm_username}`)
-      if(streams.length === 0){
-        await loadProfile()
-      }
-    }catch(e){
-      console.error("Sync error", e)
-    }
+    setStats(newTotals)
+    // setStreams(...) según lo que uses
   }
 
   async function sync100(){
