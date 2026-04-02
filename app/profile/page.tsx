@@ -40,11 +40,11 @@ export default function ProfilePage() {
   }
 
     useEffect(() => {
-    if (username) {
-      localStorage.setItem("lastfm_user", username)
+    if (username && !user) {
+      loadProfile();
     }
-  }, [username])
-    
+  }, [username, user])
+
   async function sync(){
     if(!user) return
 
