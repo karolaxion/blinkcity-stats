@@ -64,12 +64,13 @@ export default function ProfilePage() {
     setStats(newTotals)
   }
 
-  async function sync100(){
-    if(!user) return
-    try{
+  async function sync100() {
+    if (!user) return
+    try {
       await fetch(`/api/sync?username=${user.lastfm_username}&mode=100`)
-      await loadProfile()
-    }catch(e){
+      // no loadProfile() aquí
+      await sync() // o si prefieres solo recargar streams en local
+    } catch (e) {
       console.error("Sync100 error", e)
     }
   }
