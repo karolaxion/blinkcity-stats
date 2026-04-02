@@ -134,6 +134,8 @@ export default function RankingPage() {
         track_name: song,
         date: today,
         total_streams: plays
+      }, {
+        onConflict: "artist,track_name,date"
       })
     }
 
@@ -143,6 +145,8 @@ export default function RankingPage() {
         username: user,
         date: today,
         total_streams: plays
+      }, {
+        onConflict: "artist,username,date"
       })
     }
 
