@@ -90,7 +90,7 @@ export default function ProfilePage() {
   if (!username) return <div>Loading...</div>
   if(!user) return <div>Loading profile...</div>
   if(user && streams.length === 0){
-    return <div>Importing your listening history...</div>
+    return <div>Actualizando datos en segundo plano... Esto puede tardar unos minutos.</div>
   }
 
   // ======================
@@ -243,6 +243,20 @@ export default function ProfilePage() {
         </a>
 
       </div>
+
+      {/* MENSAJE DE ACTUALIZACIÓN SI NO HAY STREAMS */}
+      {streams.length === 0 && (
+        <div style={{
+          background: "#ff2e93",
+          color: "white",
+          padding: "10px",
+          borderRadius: "8px",
+          marginTop: "20px",
+          textAlign: "center"
+        }}>
+          Actualizando datos en segundo plano... Esto puede tardar unos minutos.
+        </div>
+      )}
 
       {/* BOTONES */}
 
