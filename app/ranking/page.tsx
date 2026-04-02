@@ -33,6 +33,7 @@ export default function RankingPage() {
       `)
 
     setStreams(data || [])
+    console.log("STREAMS:", data)
   }
 
   useEffect(() => {
