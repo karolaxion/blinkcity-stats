@@ -16,17 +16,59 @@ const ARTISTS = [
 export default function RankingPage() {
 
   const [streams,setStreams] = useState<any[]>([])
+  const [rankingUsers,setRankingUsers] = useState<any[]>([])
+  const [rankingSongs,setRankingSongs] = useState<any[]>([])
   const [range,setRange] = useState<"all"|"today"|"yesterday"|"week"|"last_week"|"month"|"last_month">("all")
 
   // ======================
-  // 🔥 NUEVO: GUARDAR RANKING
+  // 🔥 cargar ranking tables
   // ======================
 
-  async function saveRanking(allStreams:any[]) {
+  async function loadRanking() {
+    const { data: users } = await supabase.from("ranking_users").select("*")
+    const { data: songs } = await supabase.from("ranking_songs").select("*")
+
+    setRankingUsers(users || [])
+    setRankingSongs(songs || [])
+  }
+
+  // ======================
+  // 🔥 cargar streams + guardar ranking
+  // ======================
+
+  async function loadData() {
+    let allData: any[] = []
+    let from = 0
+    let to = 999
+
+    while (true) {
+      const { data } = await supabase
+        .from("streams")
+        .select(`
+          artist_name,
+          track_name,
+          album_image,
+          played_at,
+          users (
+            lastfm_username
+          )
+        `)
+        .range(from, to)
+
+      if (!data || data.length === 0) break
+
+      allData = [...allData, ...data]
+      from += 1000
+      to += 1000
+    }
+
+    setStreams(allData)
+
+    const today = new Date().toISOString().split("T")[0]
 
     for (const artist of ARTISTS) {
 
-      const artistStreams = allStreams.filter(s =>
+      const artistStreams = allData.filter(s =>
         s.artist_name.toUpperCase().includes(artist)
       )
 
@@ -34,7 +76,6 @@ export default function RankingPage() {
       const userCounts: Record<string, number> = {}
 
       artistStreams.forEach((stream) => {
-
         songCounts[stream.track_name] =
           (songCounts[stream.track_name] || 0) + 1
 
@@ -43,120 +84,48 @@ export default function RankingPage() {
 
         userCounts[username] =
           (userCounts[username] || 0) + 1
-
       })
 
-      // guardar canciones
       for (const [song, plays] of Object.entries(songCounts)) {
         await supabase.from("ranking_songs").upsert({
           artist,
           track_name: song,
+          date: today,
           total_streams: plays
+        }, {
+          onConflict: "artist,track_name,date"
         })
       }
 
-      // guardar usuarios
       for (const [user, plays] of Object.entries(userCounts)) {
         await supabase.from("ranking_users").upsert({
           artist,
           username: user,
+          date: today,
           total_streams: plays
+        }, {
+          onConflict: "artist,username,date"
         })
       }
-
     }
   }
-
-  // ======================
-  // 🔥 cargar data (igual pero con guardado)
-  // ======================
-
-  async function loadData() {
-  let allData: any[] = []
-  let from = 0
-  let to = 999
-
-  while (true) {
-    const { data } = await supabase
-      .from("streams")
-      .select(`
-        artist_name,
-        track_name,
-        album_image,
-        played_at,
-        users (
-          lastfm_username
-        )
-      `)
-      .range(from, to)
-
-    if (!data || data.length === 0) break
-
-    allData = [...allData, ...data]
-
-    from += 1000
-    to += 1000
-  }
-
-  setStreams(allData)
-
-  // ======================
-  // 🔥 guardar ranking POR DÍA
-  // ======================
-
-  const today = new Date().toISOString().split("T")[0]
-
-  for (const artist of ARTISTS) {
-
-    const artistStreams = allData.filter(s =>
-      s.artist_name.toUpperCase().includes(artist)
-    )
-
-    const songCounts: Record<string, number> = {}
-    const userCounts: Record<string, number> = {}
-
-    artistStreams.forEach((stream) => {
-
-      songCounts[stream.track_name] =
-        (songCounts[stream.track_name] || 0) + 1
-
-      const username = stream.users?.lastfm_username
-      if (!username) return
-
-      userCounts[username] =
-        (userCounts[username] || 0) + 1
-
-    })
-
-    for (const [song, plays] of Object.entries(songCounts)) {
-      await supabase.from("ranking_songs").upsert({
-        artist,
-        track_name: song,
-        date: today,
-        total_streams: plays
-      }, {
-        onConflict: "artist,track_name,date"
-      })
-    }
-
-    for (const [user, plays] of Object.entries(userCounts)) {
-      await supabase.from("ranking_users").upsert({
-        artist,
-        username: user,
-        date: today,
-        total_streams: plays
-      }, {
-        onConflict: "artist,username,date"
-      })
-    }
-
-  }
-}
 
   useEffect(() => {
-    loadData()
-    const interval = setInterval(loadData, 10 * 60 * 1000)
+
+    async function init() {
+      await loadData()
+      await loadRanking()
+    }
+
+    init()
+
+    const interval = setInterval(async () => {
+      await loadData()
+      await loadRanking()
+    }, 10 * 60 * 1000)
+
     return () => clearInterval(interval)
+
   }, [])
 
   // ======================
@@ -188,26 +157,10 @@ export default function RankingPage() {
     startDate = new Date(now)
     startDate.setDate(now.getDate() - day)
     startDate.setHours(0,0,0,0)
-    endDate = new Date()
-  }
-
-  if(range === "last_week"){
-    const day = now.getDay()
-    endDate = new Date(now)
-    endDate.setDate(now.getDate() - day)
-    endDate.setHours(0,0,0,0)
-    startDate = new Date(endDate)
-    startDate.setDate(startDate.getDate() - 7)
   }
 
   if(range === "month"){
     startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-    endDate = new Date()
-  }
-
-  if(range === "last_month"){
-    startDate = new Date(now.getFullYear(), now.getMonth()-1, 1)
-    endDate = new Date(now.getFullYear(), now.getMonth(), 1)
   }
 
   const filteredStreams = streams.filter(s=>{
@@ -243,33 +196,75 @@ export default function RankingPage() {
 
       {ARTISTS.map((artist) => {
 
-        const artistStreams = filteredStreams.filter(s =>
-          s.artist_name.toUpperCase().includes(artist)
-        )
+        let topSongs: any[] = []
+        let topUsers: any[] = []
+        let artistStreams: any[] = []
 
-        const songCounts: Record<string, number> = {}
-        const userCounts: Record<string, number> = {}
+        // 🔥 TODAY → streams
+        if (range === "today") {
 
-        artistStreams.forEach((stream) => {
+          artistStreams = filteredStreams.filter(s =>
+            s.artist_name.toUpperCase().includes(artist)
+          )
 
-          songCounts[stream.track_name] =
-            (songCounts[stream.track_name] || 0) + 1
+          const songCounts: Record<string, number> = {}
+          const userCounts: Record<string, number> = {}
 
-          const username = stream.users?.lastfm_username
-          if (!username) return
+          artistStreams.forEach((stream) => {
+            songCounts[stream.track_name] =
+              (songCounts[stream.track_name] || 0) + 1
 
-          userCounts[username] =
-            (userCounts[username] || 0) + 1
+            const username = stream.users?.lastfm_username
+            if (!username) return
 
-        })
+            userCounts[username] =
+              (userCounts[username] || 0) + 1
+          })
 
-        const topSongs = Object.entries(songCounts)
-          .sort((a,b)=>b[1]-a[1])
-          .slice(0,5)
+          topSongs = Object.entries(songCounts)
+            .sort((a,b)=>b[1]-a[1])
+            .slice(0,5)
 
-        const topUsers = Object.entries(userCounts)
-          .sort((a,b)=>b[1]-a[1])
-          .slice(0,5)
+          topUsers = Object.entries(userCounts)
+            .sort((a,b)=>b[1]-a[1])
+            .slice(0,5)
+
+        }
+
+        // 🔥 RESTO → ranking tables
+        else {
+
+          const startStr = startDate.toISOString().split("T")[0]
+
+          const artistUsers = rankingUsers.filter(u =>
+            u.artist === artist &&
+            u.date >= startStr
+          )
+
+          const artistSongs = rankingSongs.filter(s =>
+            s.artist === artist &&
+            s.date >= startStr
+          )
+
+          const userMap: Record<string, number> = {}
+          const songMap: Record<string, number> = {}
+
+          artistUsers.forEach(u => {
+            userMap[u.username] = (userMap[u.username] || 0) + u.total_streams
+          })
+
+          artistSongs.forEach(s => {
+            songMap[s.track_name] = (songMap[s.track_name] || 0) + s.total_streams
+          })
+
+          topUsers = Object.entries(userMap)
+            .sort((a,b)=>b[1]-a[1])
+            .slice(0,5)
+
+          topSongs = Object.entries(songMap)
+            .sort((a,b)=>b[1]-a[1])
+            .slice(0,5)
+        }
 
         return (
           <div key={artist} style={{ marginTop: "60px" }}>

@@ -25,6 +25,7 @@ useEffect(() => {
 
   const [user, setUser] = useState<any>(null)
   const [streams, setStreams] = useState<any[]>([])
+  const [dailyStats, setDailyStats] = useState<any[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [range, setRange] = useState<"today"|"yesterday"|"week"|"last_week"|"month"|"last_month"|"all">("today")
 
@@ -42,23 +43,49 @@ useEffect(() => {
       .order("played_at", { ascending: false })
 
     setStreams(userStreams ?? [])
-    sync() // second stage background
+
+    // 🔥 USER DAILY STATS
+    const today = new Date().toISOString().split("T")[0]
+
+    const todayCount = (userStreams ?? []).filter((s:any)=>{
+      const d = new Date(s.played_at)
+      const start = new Date()
+      start.setHours(0,0,0,0)
+      return d >= start
+    }).length
+
+    await supabase.from("user_daily_stats").upsert({
+      user_id: userData.id,
+      date: today,
+      total_streams: todayCount
+    }, {
+      onConflict: "user_id,date"
+    })
+
+    const { data: stats } = await supabase
+      .from("user_daily_stats")
+      .select("*")
+      .eq("user_id", userData.id)
+
+    setDailyStats(stats || [])
+
+    sync(userData) // 🔥 FIX
   }
 
-  async function sync() {
-    if (!user) return
-    await fetch(`/api/sync?username=${user.lastfm_username}&mode=100`)
+  async function sync(currentUser:any) {
+    if (!currentUser) return
+    await fetch(`/api/sync?username=${currentUser.lastfm_username}&mode=100`)
     const { data: userStreams } = await supabase
       .from("streams")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", currentUser.id)
       .order("played_at", { ascending: false })
     setStreams(userStreams ?? [])
   }
 
   async function sync100() {
     if (!user) return
-    await sync()
+    await sync(user)
   }
 
   useEffect(() => {
@@ -124,21 +151,41 @@ useEffect(() => {
     endDate = new Date()
   }
 
-  const modalStreams = streams.filter((s:any)=>{
-    const date = new Date(s.played_at)
-    return date >= startDate && date < endDate
-  })
+  // 🔥 HÍBRIDO
+  let modalStreams:any[] = []
+
+  if (range === "today") {
+
+    modalStreams = streams.filter((s:any)=>{
+      const date = new Date(s.played_at)
+      return date >= startDate && date < endDate
+    })
+
+  } else {
+
+    const startStr = startDate.toISOString().split("T")[0]
+
+    const filteredStats = dailyStats.filter((d:any)=>
+      d.date >= startStr
+    )
+
+    const total = filteredStats.reduce((acc:any,d:any)=>acc + d.total_streams,0)
+
+    modalStreams = Array(total).fill({})
+  }
 
   const modalSongCounts:any = {}
   const modalArtistCounts:any = {}
 
-  modalStreams.forEach((s:any)=>{
-    const artist = s.artist_name.toUpperCase()
-    const key = `${artist} — ${s.track_name}`
+  if (range === "today") {
+    modalStreams.forEach((s:any)=>{
+      const artist = s.artist_name.toUpperCase()
+      const key = `${artist} — ${s.track_name}`
 
-    modalSongCounts[key] = (modalSongCounts[key]||0)+1
-    modalArtistCounts[artist] = (modalArtistCounts[artist]||0)+1
-  })
+      modalSongCounts[key] = (modalSongCounts[key]||0)+1
+      modalArtistCounts[artist] = (modalArtistCounts[artist]||0)+1
+    })
+  }
 
   const modalTopSongs = Object.entries(modalSongCounts)
     .sort((a:any,b:any)=>b[1]-a[1])
