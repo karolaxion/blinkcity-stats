@@ -18,25 +18,22 @@ export default function RankingPage() {
   const [streams,setStreams] = useState<any[]>([])
   const [rankingUsers,setRankingUsers] = useState<any[]>([])
   const [rankingSongs,setRankingSongs] = useState<any[]>([])
-  const [musicMetadata,setMusicMetadata] = useState<any[]>([]) // 🔥 NUEVO
   const [range,setRange] = useState<"all"|"today"|"yesterday"|"week"|"last_week"|"month"|"last_month">("all")
 
   // ======================
-  // 🔥 cargar ranking tables
+  // cargar ranking tables
   // ======================
 
   async function loadRanking() {
     const { data: users } = await supabase.from("ranking_users").select("*")
     const { data: songs } = await supabase.from("ranking_songs").select("*")
-    const { data: meta } = await supabase.from("music_metadata").select("*") // 🔥 NUEVO
 
     setRankingUsers(users || [])
     setRankingSongs(songs || [])
-    setMusicMetadata(meta || []) // 🔥 NUEVO
   }
 
   // ======================
-  // 🔥 cargar streams + guardar ranking + metadata
+  // cargar streams + guardar ranking
   // ======================
 
   async function loadData() {
@@ -51,7 +48,6 @@ export default function RankingPage() {
           artist_name,
           track_name,
           album_image,
-          artist_image,
           played_at,
           users (
             lastfm_username
@@ -67,54 +63,6 @@ export default function RankingPage() {
     }
 
     setStreams(allData)
-
-    // ======================
-    // 🔥 GUARDAR METADATA (NUEVO)
-    // ======================
-
-    for (const s of allData) {
-
-  if (!s.track_name || !s.artist_name) continue
-
-  const artistUpper = s.artist_name.toUpperCase()
-
-  const isValidArtist = ARTISTS.some(a =>
-    artistUpper.includes(a)
-  )
-
-  if (!isValidArtist) continue
-
-  const { data: exists } = await supabase
-  .from("music_metadata")
-  .select("*")
-  .eq("artist", s.artist_name)
-  .eq("track_name", s.track_name)
-  .single()
-
-if (!exists) {
-
-  await supabase.from("music_metadata").insert({
-    artist: s.artist_name,
-    track_name: s.track_name,
-    album_image: s.album_image,
-    artist_image: s.artist_image
-  })
-
-} else {
-
-  // 🔥 SI YA EXISTE PERO NO TIENE IMAGEN → ACTUALIZAR
-  if (!exists.album_image && s.album_image) {
-
-    await supabase.from("music_metadata")
-      .update({
-        album_image: s.album_image
-      })
-      .eq("artist", s.artist_name)
-      .eq("track_name", s.track_name)
-
-  }
-
-}
 
     const today = new Date().toISOString().split("T")[0]
 
@@ -181,7 +129,7 @@ if (!exists) {
   }, [])
 
   // ======================
-  // 🔥 FILTRO POR FECHA
+  // FILTRO POR FECHA
   // ======================
 
   const now = new Date()
@@ -330,24 +278,9 @@ if (!exists) {
 
                 {topSongs.map(([song,plays],index)=>{
 
-                  // 🔥 USAR METADATA
-                  let image = null
-
-                  const meta = musicMetadata.find(
-                    m => m.track_name === song && m.artist.toUpperCase().includes(artist)
+                  const stream = artistStreams.find(
+                    s=>s.track_name===song
                   )
-
-                  if (meta?.album_image) {
-                    image = meta.album_image
-                  } else if (artistStreams.length > 0) {
-                    const stream = artistStreams.find(
-                      s => s.track_name === song
-                    )
-                    if (stream?.album_image) {
-                      image = stream.album_image
-                    }
-                  }
-              
 
                   return(
                     <div key={song} style={{
@@ -361,15 +294,10 @@ if (!exists) {
                     }}>
                       <b style={{ width:"20px" }}>{index+1}</b>
 
-                      {/*
-                      <img
-                        src={image || "/no-image.png"}
-                        width="50"
-                        height="50"
-                        style={{borderRadius:"6px"}}
-                      />
-                      */}
-                    
+                      {stream?.album_image && (
+                        <img src={stream.album_image} width="50" height="50" style={{ borderRadius:"6px" }}/>
+                      )}
+
                       <div>
                         <div>{song}</div>
                         <div style={{fontSize:"12px",opacity:.6}}>
@@ -408,5 +336,4 @@ if (!exists) {
 
     </div>
   )
-}
 }
