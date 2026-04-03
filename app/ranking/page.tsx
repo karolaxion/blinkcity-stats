@@ -361,12 +361,14 @@ if (!exists) {
                     }}>
                       <b style={{ width:"20px" }}>{index+1}</b>
 
+                      {/*
                       <img
                         src={image || "/no-image.png"}
                         width="50"
                         height="50"
                         style={{borderRadius:"6px"}}
                       />
+                      */}
                     
                       <div>
                         <div>{song}</div>
