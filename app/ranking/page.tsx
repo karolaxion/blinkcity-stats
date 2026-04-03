@@ -18,6 +18,7 @@ export default function RankingPage() {
   const [streams,setStreams] = useState<any[]>([])
   const [rankingUsers,setRankingUsers] = useState<any[]>([])
   const [rankingSongs,setRankingSongs] = useState<any[]>([])
+  const [musicMetadata,setMusicMetadata] = useState<any[]>([]) // ✅ NUEVO
   const [range,setRange] = useState<"all"|"today"|"yesterday"|"week"|"last_week"|"month"|"last_month">("all")
 
   // ======================
@@ -28,8 +29,12 @@ export default function RankingPage() {
     const { data: users } = await supabase.from("ranking_users").select("*")
     const { data: songs } = await supabase.from("ranking_songs").select("*")
 
+    // ✅ NUEVO (leer metadata)
+    const { data: meta } = await supabase.from("music_metadata").select("*")
+
     setRankingUsers(users || [])
     setRankingSongs(songs || [])
+    setMusicMetadata(meta || []) // ✅ NUEVO
   }
 
   // ======================
@@ -282,6 +287,11 @@ export default function RankingPage() {
                     s=>s.track_name===song
                   )
 
+                  // ✅ NUEVO: buscar metadata
+                  const meta = musicMetadata.find(
+                    m => m.track_name === song && m.artist?.toUpperCase().includes(artist)
+                  )
+
                   return(
                     <div key={song} style={{
                       display:"flex",
@@ -294,14 +304,15 @@ export default function RankingPage() {
                     }}>
                       <b style={{ width:"20px" }}>{index+1}</b>
 
-                      {stream?.album_image && (
+                      {/* ✅ USAR METADATA */}
+                      {meta?.album_image && (
                         <img
-                        src={stream.album_image}
-                        width="50"
-                        height="50"
-                        style={{ borderRadius:"6px" }}
+                          src={meta.album_image}
+                          width="50"
+                          height="50"
+                          style={{ borderRadius:"6px" }}
                         />
-                  )}
+                      )}
 
                       <div>
                         <div>{song}</div>
