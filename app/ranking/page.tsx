@@ -18,6 +18,7 @@ export default function RankingPage() {
   const [streams,setStreams] = useState<any[]>([])
   const [rankingUsers,setRankingUsers] = useState<any[]>([])
   const [rankingSongs,setRankingSongs] = useState<any[]>([])
+  const [musicMetadata,setMusicMetadata] = useState<any[]>([]) // 🔥 NUEVO
   const [range,setRange] = useState<"all"|"today"|"yesterday"|"week"|"last_week"|"month"|"last_month">("all")
 
   // ======================
@@ -27,13 +28,15 @@ export default function RankingPage() {
   async function loadRanking() {
     const { data: users } = await supabase.from("ranking_users").select("*")
     const { data: songs } = await supabase.from("ranking_songs").select("*")
+    const { data: meta } = await supabase.from("music_metadata").select("*") // 🔥 NUEVO
 
     setRankingUsers(users || [])
     setRankingSongs(songs || [])
+    setMusicMetadata(meta || []) // 🔥 NUEVO
   }
 
   // ======================
-  // 🔥 cargar streams + guardar ranking
+  // 🔥 cargar streams + guardar ranking + metadata
   // ======================
 
   async function loadData() {
@@ -48,6 +51,7 @@ export default function RankingPage() {
           artist_name,
           track_name,
           album_image,
+          artist_image,
           played_at,
           users (
             lastfm_username
@@ -63,6 +67,31 @@ export default function RankingPage() {
     }
 
     setStreams(allData)
+
+    // ======================
+    // 🔥 GUARDAR METADATA (NUEVO)
+    // ======================
+
+    for (const s of allData) {
+
+      if (!s.track_name || !s.artist_name) continue
+
+      const { data: exists } = await supabase
+        .from("music_metadata")
+        .select("track_name")
+        .eq("artist", s.artist_name)
+        .eq("track_name", s.track_name)
+        .single()
+
+      if (!exists) {
+        await supabase.from("music_metadata").insert({
+          artist: s.artist_name,
+          track_name: s.track_name,
+          album_image: s.album_image,
+          artist_image: s.artist_image
+        })
+      }
+    }
 
     const today = new Date().toISOString().split("T")[0]
 
@@ -200,7 +229,6 @@ export default function RankingPage() {
         let topUsers: any[] = []
         let artistStreams: any[] = []
 
-        // 🔥 TODAY → streams
         if (range === "today") {
 
           artistStreams = filteredStreams.filter(s =>
@@ -229,10 +257,7 @@ export default function RankingPage() {
             .sort((a,b)=>b[1]-a[1])
             .slice(0,5)
 
-        }
-
-        // 🔥 RESTO → ranking tables
-        else {
+        } else {
 
           const startStr = startDate.toISOString().split("T")[0]
 
@@ -282,8 +307,9 @@ export default function RankingPage() {
 
                 {topSongs.map(([song,plays],index)=>{
 
-                  const stream = artistStreams.find(
-                    s=>s.track_name===song
+                  // 🔥 USAR METADATA
+                  const meta = musicMetadata.find(
+                    m => m.track_name === song && m.artist.toUpperCase().includes(artist)
                   )
 
                   return(
@@ -298,8 +324,8 @@ export default function RankingPage() {
                     }}>
                       <b style={{ width:"20px" }}>{index+1}</b>
 
-                      {stream?.album_image && (
-                        <img src={stream.album_image} width="50" height="50" style={{ borderRadius:"6px" }}/>
+                      {meta?.album_image && (
+                        <img src={meta.album_image} width="50" height="50" style={{ borderRadius:"6px" }}/>
                       )}
 
                       <div>
