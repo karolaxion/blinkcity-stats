@@ -25,7 +25,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [streams, setStreams] = useState<any[]>([])
   const [dailyStats, setDailyStats] = useState<any[]>([])
-  const [songDailyStats, setSongDailyStats] = useState<any[]>([]) // 🔥 NUEVO
+  const [songDailyStats, setSongDailyStats] = useState<any[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [range, setRange] = useState<"today"|"yesterday"|"week"|"last_week"|"month"|"last_month"|"all">("today")
 
@@ -50,20 +50,13 @@ export default function ProfilePage() {
 
     setStreams(userStreams ?? [])
 
-    // ======================
-    // 🔥 FECHA CORRECTA (played_at)
-    // ======================
-
     const todayLocal = new Date()
     const yyyy = todayLocal.getFullYear()
     const mm = String(todayLocal.getMonth()+1).padStart(2,"0")
     const dd = String(todayLocal.getDate()).padStart(2,"0")
     const today = `${yyyy}-${mm}-${dd}`
 
-    // ======================
-    // 🔥 USER DAILY STATS
-    // ======================
-
+    // DAILY TOTAL
     const todayCount = (userStreams ?? []).filter((s:any)=>{
       const d = new Date(s.played_at)
       const local = new Date(d.getTime() - d.getTimezoneOffset()*60000)
@@ -81,10 +74,7 @@ export default function ProfilePage() {
       onConflict: "user_id,date"
     })
 
-    // ======================
-    // 🔥 USER SONG DAILY STATS (NUEVO)
-    // ======================
-
+    // SONG DAILY
     const songMap: Record<string, number> = {}
 
     ;(userStreams ?? []).forEach((s:any)=>{
@@ -113,10 +103,6 @@ export default function ProfilePage() {
         onConflict: "user_id,date,artist,track_name"
       })
     }
-
-    // ======================
-    // 🔥 CARGAR STATS
-    // ======================
 
     const { data: stats } = await supabase
       .from("user_daily_stats")
@@ -190,79 +176,73 @@ export default function ProfilePage() {
     startDate = new Date(now)
     startDate.setDate(now.getDate() - day)
     startDate.setHours(0,0,0,0)
-    endDate = new Date()
   }
 
   if(range === "month"){
     startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-    endDate = new Date()
   }
 
   if(range === "all"){
     startDate = new Date(0)
-    endDate = new Date()
   }
 
   // ======================
-  // 🔥 HÍBRIDO (MEJORADO)
+  // TOPS (FIX FINAL)
   // ======================
 
-  let modalStreams:any[] = []
+  let modalTopSongs:any[] = []
+  let modalTopArtists:any[] = []
 
   if (range === "today") {
 
-    modalStreams = streams.filter((s:any)=>{
+    const modalStreams = streams.filter((s:any)=>{
       const date = new Date(s.played_at)
       return date >= startDate && date < endDate
     })
+
+    const songCounts:any = {}
+    const artistCounts:any = {}
+
+    modalStreams.forEach((s:any)=>{
+      const artist = s.artist_name.toUpperCase()
+      const key = `${artist} — ${s.track_name}`
+
+      songCounts[key] = (songCounts[key]||0)+1
+      artistCounts[artist] = (artistCounts[artist]||0)+1
+    })
+
+    modalTopSongs = Object.entries(songCounts)
+      .sort((a:any,b:any)=>b[1]-a[1])
+      .slice(0,5)
+
+    modalTopArtists = Object.entries(artistCounts)
+      .sort((a:any,b:any)=>b[1]-a[1])
+      .slice(0,5)
 
   } else {
 
     const startStr = startDate.toISOString().split("T")[0]
 
-    const filteredSongs = songDailyStats.filter((s:any)=>
-      s.date >= startStr
-    )
+    const filtered = songDailyStats.filter((s:any)=> s.date >= startStr)
 
     const songCounts:any = {}
     const artistCounts:any = {}
 
-    filteredSongs.forEach((s:any)=>{
+    filtered.forEach((s:any)=>{
       const key = `${s.artist} — ${s.track_name}`
 
       songCounts[key] = (songCounts[key] || 0) + s.total_streams
       artistCounts[s.artist] = (artistCounts[s.artist] || 0) + s.total_streams
     })
 
-    const modalTopSongs = Object.entries(songCounts)
+    modalTopSongs = Object.entries(songCounts)
       .sort((a:any,b:any)=>b[1]-a[1])
       .slice(0,5)
 
-    const modalTopArtists = Object.entries(artistCounts)
+    modalTopArtists = Object.entries(artistCounts)
       .sort((a:any,b:any)=>b[1]-a[1])
       .slice(0,5)
-
-    return { modalTopSongs, modalTopArtists } as any
   }
-
-  const modalSongCounts:any = {}
-  const modalArtistCounts:any = {}
-
-  modalStreams.forEach((s:any)=>{
-    const artist = s.artist_name.toUpperCase()
-    const key = `${artist} — ${s.track_name}`
-
-    modalSongCounts[key] = (modalSongCounts[key]||0)+1
-    modalArtistCounts[artist] = (modalArtistCounts[artist]||0)+1
-  })
-
-  const modalTopSongs = Object.entries(modalSongCounts)
-    .sort((a:any,b:any)=>b[1]-a[1])
-    .slice(0,5)
-
-  const modalTopArtists = Object.entries(modalArtistCounts)
-    .sort((a:any,b:any)=>b[1]-a[1])
-    .slice(0,5)
 
   // ======================
   // NORMAL STATS
