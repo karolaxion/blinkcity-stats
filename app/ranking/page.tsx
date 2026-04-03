@@ -294,16 +294,14 @@ export default function RankingPage() {
                     }}>
                       <b style={{ width:"20px" }}>{index+1}</b>
 
-                      <img
-                        src={
-                          stream?.album_image && stream.album_image.startsWith("http")
-                            ? stream.album_image
-                            : "/no-image.png"
-                        }
+                      {stream?.album_image && (
+                        <img
+                        src={stream.album_image}
                         width="50"
                         height="50"
                         style={{ borderRadius:"6px" }}
-                      />
+                        />
+                  )}
 
                       <div>
                         <div>{song}</div>
