@@ -331,15 +331,22 @@ if (!exists) {
                 {topSongs.map(([song,plays],index)=>{
 
                   // 🔥 USAR METADATA
+                  let image = null
+
                   const meta = musicMetadata.find(
                     m => m.track_name === song && m.artist.toUpperCase().includes(artist)
                   )
 
-                  const stream = artistStreams.find(
-                    s => s.track_name === song
-                  )
-
-                  const image = meta?.album_image || stream?.album_image
+                  if (meta?.album_image) {
+                    image = meta.album_image
+                  } else if (artistStreams.length > 0) {
+                    const stream = artistStreams.find(
+                      s => s.track_name === song
+                    )
+                    if (stream?.album_image) {
+                      image = stream.album_image
+                    }
+                  }
               
 
                   return(
@@ -354,10 +361,13 @@ if (!exists) {
                     }}>
                       <b style={{ width:"20px" }}>{index+1}</b>
 
-                      {image && (
-                        <img src={image} width="50" height="50" style={{ borderRadius:"6px" }}/>
-                      )}
-
+                      <img
+                        src={image || "/no-image.png"}
+                        width="50"
+                        height="50"
+                        style={{borderRadius:"6px"}}
+                      />
+                    
                       <div>
                         <div>{song}</div>
                         <div style={{fontSize:"12px",opacity:.6}}>
