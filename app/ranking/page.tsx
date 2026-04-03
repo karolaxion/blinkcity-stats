@@ -74,24 +74,32 @@ export default function RankingPage() {
 
     for (const s of allData) {
 
-      if (!s.track_name || !s.artist_name) continue
+  if (!s.track_name || !s.artist_name) continue
 
-      const { data: exists } = await supabase
-        .from("music_metadata")
-        .select("track_name")
-        .eq("artist", s.artist_name)
-        .eq("track_name", s.track_name)
-        .single()
+  const artistUpper = s.artist_name.toUpperCase()
 
-      if (!exists) {
-        await supabase.from("music_metadata").insert({
-          artist: s.artist_name,
-          track_name: s.track_name,
-          album_image: s.album_image,
-          artist_image: s.artist_image
-        })
-      }
-    }
+  const isValidArtist = ARTISTS.some(a =>
+    artistUpper.includes(a)
+  )
+
+  if (!isValidArtist) continue
+
+  const { data: exists } = await supabase
+    .from("music_metadata")
+    .select("track_name")
+    .eq("artist", s.artist_name)
+    .eq("track_name", s.track_name)
+    .single()
+
+  if (!exists) {
+    await supabase.from("music_metadata").insert({
+      artist: s.artist_name,
+      track_name: s.track_name,
+      album_image: s.album_image,
+      artist_image: s.artist_image
+    })
+  }
+}
 
     const today = new Date().toISOString().split("T")[0]
 
