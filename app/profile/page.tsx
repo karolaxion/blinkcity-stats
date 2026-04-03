@@ -16,12 +16,11 @@ export default function ProfilePage() {
   const username = usernameFromUrl || usernameFromStorage
   const router = useRouter()
 
-  // 🔥 FIX: restaurar username en la URL
-useEffect(() => {
-  if (!usernameFromUrl && usernameFromStorage) {
-    router.replace(`/profile?username=${usernameFromStorage}`)
-  }
-}, [usernameFromUrl])
+  useEffect(() => {
+    if (!usernameFromUrl && usernameFromStorage) {
+      router.replace(`/profile?username=${usernameFromStorage}`)
+    }
+  }, [usernameFromUrl])
 
   const [user, setUser] = useState<any>(null)
   const [streams, setStreams] = useState<any[]>([])
@@ -31,7 +30,13 @@ useEffect(() => {
 
   async function loadProfile() {
     if (!username) return
-    const { data: userData } = await supabase.from("users").select("*").eq("lastfm_username", username).single()
+
+    const { data: userData } = await supabase
+      .from("users")
+      .select("*")
+      .eq("lastfm_username", username)
+      .single()
+
     if (!userData) return
 
     setUser(userData)
@@ -44,14 +49,23 @@ useEffect(() => {
 
     setStreams(userStreams ?? [])
 
-    // 🔥 USER DAILY STATS
-    const today = new Date().toISOString().split("T")[0]
+    // ======================
+    // 🔥 FIX REAL: usar played_at
+    // ======================
+
+    const todayLocal = new Date()
+    const yyyy = todayLocal.getFullYear()
+    const mm = String(todayLocal.getMonth()+1).padStart(2,"0")
+    const dd = String(todayLocal.getDate()).padStart(2,"0")
+    const today = `${yyyy}-${mm}-${dd}`
 
     const todayCount = (userStreams ?? []).filter((s:any)=>{
       const d = new Date(s.played_at)
-      const start = new Date()
-      start.setHours(0,0,0,0)
-      return d >= start
+      const local = new Date(d.getTime() - d.getTimezoneOffset()*60000)
+        .toISOString()
+        .split("T")[0]
+
+      return local === today
     }).length
 
     await supabase.from("user_daily_stats").upsert({
@@ -69,17 +83,20 @@ useEffect(() => {
 
     setDailyStats(stats || [])
 
-    sync(userData) // 🔥 FIX
+    sync(userData)
   }
 
   async function sync(currentUser:any) {
     if (!currentUser) return
+
     await fetch(`/api/sync?username=${currentUser.lastfm_username}&mode=100`)
+
     const { data: userStreams } = await supabase
       .from("streams")
       .select("*")
       .eq("user_id", currentUser.id)
       .order("played_at", { ascending: false })
+
     setStreams(userStreams ?? [])
   }
 
@@ -97,7 +114,7 @@ useEffect(() => {
   if (!user) return <div>Loading profile...</div>
 
   // ======================
-  // MODAL LOGIC (FIXED)
+  // MODAL LOGIC
   // ======================
 
   const now = new Date()
@@ -151,7 +168,10 @@ useEffect(() => {
     endDate = new Date()
   }
 
+  // ======================
   // 🔥 HÍBRIDO
+  // ======================
+
   let modalStreams:any[] = []
 
   if (range === "today") {
