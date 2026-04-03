@@ -22,29 +22,42 @@ export default function ArtistPage() {
   const [streams,setStreams] = useState<any[]>([])
   const [rankingUsers,setRankingUsers] = useState<any[]>([])
   const [rankingSongs,setRankingSongs] = useState<any[]>([])
-  const [musicMetadata,setMusicMetadata] = useState<any[]>([]) // ✅ NUEVO
+  const [musicMetadata,setMusicMetadata] = useState<any[]>([])
   const [artistImage,setArtistImage] = useState<string|null>(null)
 
   const [range,setRange] = useState<"all"|"today"|"yesterday"|"week"|"last_week"|"month"|"last_month">("all")
 
   // ======================
-  // 🔥 cargar ranking tables
+  // ✅ NUEVO: función correcta
+  // ======================
+
+  function isSameArtist(name:string, target:string){
+    const a = name.toUpperCase()
+
+    if(target === "ROSÉ"){
+      return a === "ROSÉ" || a === "ROSE"
+    }
+
+    return a === target
+  }
+
+  // ======================
+  // cargar ranking tables
   // ======================
 
   async function loadRanking() {
     const { data: users } = await supabase.from("ranking_users").select("*")
     const { data: songs } = await supabase.from("ranking_songs").select("*")
 
-    // ✅ NUEVO metadata
     const { data: meta } = await supabase.from("music_metadata").select("*")
 
     setRankingUsers(users || [])
     setRankingSongs(songs || [])
-    setMusicMetadata(meta || []) // ✅ NUEVO
+    setMusicMetadata(meta || [])
   }
 
   // ======================
-  // 🔥 LOAD DATA
+  // LOAD DATA
   // ======================
 
   async function loadData(){
@@ -84,7 +97,7 @@ export default function ArtistPage() {
     if (!img) {
       img =
         allData.find((s:any)=>
-          s.artist_name.toUpperCase().includes(normalizedArtist)
+          isSameArtist(s.artist_name, normalizedArtist)
         )?.artist_image || null
     }
 
@@ -100,7 +113,7 @@ export default function ArtistPage() {
   },[])
 
   // ======================
-  // 🔥 FILTRO FECHA
+  // FILTRO FECHA
   // ======================
 
   const now = new Date()
@@ -141,7 +154,7 @@ export default function ArtistPage() {
   })
 
   // ======================
-  // 🔥 LOGICA HIBRIDA
+  // LOGICA HIBRIDA
   // ======================
 
   let topSongs:any[] = []
@@ -150,13 +163,9 @@ export default function ArtistPage() {
 
   if (range === "today") {
 
-    artistStreams = filteredStreams.filter(stream => {
-      const artistUpper = stream.artist_name.toUpperCase()
-      if (artistName === "rose") {
-        return artistUpper.includes("ROSÉ") || artistUpper.includes("ROSE")
-      }
-      return artistUpper.includes(artistName.toUpperCase())
-    })
+    artistStreams = filteredStreams.filter(stream =>
+      isSameArtist(stream.artist_name, normalizedArtist)
+    )
 
     const songCounts: Record<string, number> = {}
     const userCounts: Record<string, number> = {}
@@ -283,7 +292,7 @@ export default function ArtistPage() {
           {topSongs.map(([song,plays]:any,index:number)=>{
 
             const meta = musicMetadata.find(
-              m => m.track_name === song && m.artist?.toUpperCase().includes(normalizedArtist)
+              m => m.track_name === song && isSameArtist(m.artist || "", normalizedArtist)
             )
 
             return(
@@ -298,7 +307,6 @@ export default function ArtistPage() {
               }}>
                 <b>{index+1}</b>
 
-                {/* ✅ IMAGEN DESDE METADATA */}
                 {meta?.album_image && (
                   <img
                     src={meta.album_image}
