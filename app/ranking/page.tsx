@@ -335,6 +335,13 @@ if (!exists) {
                     m => m.track_name === song && m.artist.toUpperCase().includes(artist)
                   )
 
+                  const stream = artistStreams.find(
+                    s => s.track_name === song
+                  )
+
+                  const image = meta?.album_image || stream?.album_image
+              
+
                   return(
                     <div key={song} style={{
                       display:"flex",
@@ -347,8 +354,8 @@ if (!exists) {
                     }}>
                       <b style={{ width:"20px" }}>{index+1}</b>
 
-                      {meta?.album_image && (
-                        <img src={meta.album_image} width="50" height="50" style={{ borderRadius:"6px" }}/>
+                      {image && (
+                        <img src={image} width="50" height="50" style={{ borderRadius:"6px" }}/>
                       )}
 
                       <div>
