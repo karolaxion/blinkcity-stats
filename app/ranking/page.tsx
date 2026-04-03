@@ -85,20 +85,35 @@ export default function RankingPage() {
   if (!isValidArtist) continue
 
   const { data: exists } = await supabase
-    .from("music_metadata")
-    .select("track_name")
-    .eq("artist", s.artist_name)
-    .eq("track_name", s.track_name)
-    .single()
+  .from("music_metadata")
+  .select("*")
+  .eq("artist", s.artist_name)
+  .eq("track_name", s.track_name)
+  .single()
 
-  if (!exists) {
-    await supabase.from("music_metadata").insert({
-      artist: s.artist_name,
-      track_name: s.track_name,
-      album_image: s.album_image,
-      artist_image: s.artist_image
-    })
+if (!exists) {
+
+  await supabase.from("music_metadata").insert({
+    artist: s.artist_name,
+    track_name: s.track_name,
+    album_image: s.album_image,
+    artist_image: s.artist_image
+  })
+
+} else {
+
+  // 🔥 SI YA EXISTE PERO NO TIENE IMAGEN → ACTUALIZAR
+  if (!exists.album_image && s.album_image) {
+
+    await supabase.from("music_metadata")
+      .update({
+        album_image: s.album_image
+      })
+      .eq("artist", s.artist_name)
+      .eq("track_name", s.track_name)
+
   }
+
 }
 
     const today = new Date().toISOString().split("T")[0]
