@@ -22,6 +22,7 @@ export default function ArtistPage() {
   const [streams,setStreams] = useState<any[]>([])
   const [rankingUsers,setRankingUsers] = useState<any[]>([])
   const [rankingSongs,setRankingSongs] = useState<any[]>([])
+  const [musicMetadata,setMusicMetadata] = useState<any[]>([]) // ✅ NUEVO
   const [artistImage,setArtistImage] = useState<string|null>(null)
 
   const [range,setRange] = useState<"all"|"today"|"yesterday"|"week"|"last_week"|"month"|"last_month">("all")
@@ -34,8 +35,12 @@ export default function ArtistPage() {
     const { data: users } = await supabase.from("ranking_users").select("*")
     const { data: songs } = await supabase.from("ranking_songs").select("*")
 
+    // ✅ NUEVO metadata
+    const { data: meta } = await supabase.from("music_metadata").select("*")
+
     setRankingUsers(users || [])
     setRankingSongs(songs || [])
+    setMusicMetadata(meta || []) // ✅ NUEVO
   }
 
   // ======================
@@ -275,24 +280,43 @@ export default function ArtistPage() {
         {/* SONGS */}
         <div>
           <h2>Top Songs</h2>
-          {topSongs.map(([song,plays]:any,index:number)=>(
-            <div key={song} style={{
-              display:"flex",
-              gap:"10px",
-              background:"#111",
-              padding:"12px",
-              borderRadius:"12px",
-              marginTop:"10px"
-            }}>
-              <b>{index+1}</b>
-              <div>
-                <div>{song}</div>
-                <div style={{fontSize:"12px",opacity:.6}}>
-                  {plays} Streams
+          {topSongs.map(([song,plays]:any,index:number)=>{
+
+            const meta = musicMetadata.find(
+              m => m.track_name === song && m.artist?.toUpperCase().includes(normalizedArtist)
+            )
+
+            return(
+              <div key={song} style={{
+                display:"flex",
+                alignItems:"center",
+                gap:"10px",
+                background:"#111",
+                padding:"12px",
+                borderRadius:"12px",
+                marginTop:"10px"
+              }}>
+                <b>{index+1}</b>
+
+                {/* ✅ IMAGEN DESDE METADATA */}
+                {meta?.album_image && (
+                  <img
+                    src={meta.album_image}
+                    width="50"
+                    height="50"
+                    style={{borderRadius:"6px"}}
+                  />
+                )}
+
+                <div>
+                  <div>{song}</div>
+                  <div style={{fontSize:"12px",opacity:.6}}>
+                    {plays} Streams
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* USERS */}
