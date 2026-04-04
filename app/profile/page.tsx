@@ -25,6 +25,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [streams, setStreams] = useState<any[]>([])
   const [dailyStats, setDailyStats] = useState<any[]>([])
+  const [musicMetadata, setMusicMetadata] = useState<any[]>([])
   const [songDailyStats, setSongDailyStats] = useState<any[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [range, setRange] = useState<"today"|"yesterday"|"week"|"last_week"|"month"|"last_month"|"all">("today")
@@ -49,6 +50,12 @@ export default function ProfilePage() {
       .order("played_at", { ascending: false })
 
     setStreams(userStreams ?? [])
+
+    const { data: meta } = await supabase
+      .from("music_metadata")
+      .select("*")
+
+    setMusicMetadata(meta || [])
 
     const todayLocal = new Date()
     const yyyy = todayLocal.getFullYear()
@@ -369,8 +376,12 @@ export default function ProfilePage() {
 
           {topSongs.map(([song,plays]:any,index:number)=>{
 
-            const stream = streams.find(
-              (s:any)=>`${s.artist_name.toUpperCase()} — ${s.track_name}`===song
+            const [artist, track] = song.split(" — ")
+
+            const meta = (musicMetadata as any[]).find(
+              (m)=>
+                m.track_name?.toLowerCase() === track.toLowerCase() &&
+                m.artist?.toLowerCase() === artist.toLowerCase()
             )
 
             return(
@@ -385,19 +396,22 @@ export default function ProfilePage() {
               }}>
                 <b>{index+1}</b>
 
-                {stream?.album_image &&(
-                  <img src={stream.album_image} width="50" height="50" style={{borderRadius:"6px"}}/>
-                )}
+                <img
+                  src={meta?.album_image || "/fallback.jpg"}
+                  width="50"
+                  height="50"
+                  style={{borderRadius:"6px"}}
+                />
 
                 <div>
                   <div>{song}</div>
                   <div style={{fontSize:"12px",opacity:.6}}>
                     {plays} Streams
-                  </div>
+                 </div>
                 </div>
 
               </div>
-            )
+             )
           })}
         </div>
 
