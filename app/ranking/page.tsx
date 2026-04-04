@@ -117,21 +117,31 @@ export default function RankingPage() {
 
   useEffect(() => {
 
-    async function init() {
-      await loadData()
-      await loadRanking()
-    }
+  async function testAggregated() {
+    const { data, error } = await supabase
+      .from("aggregated_daily_stats")
+      .select("artist, track_name, total_streams")
+      .limit(5)
 
-    init()
+    console.log("AGGREGATED TEST:", data)
+  }
 
-    const interval = setInterval(async () => {
-      await loadData()
-      await loadRanking()
-    }, 10 * 60 * 1000)
+  async function init() {
+    await loadData()
+    await loadRanking()
+    await testAggregated() // 👈 SOLO ESTO AGREGAMOS
+  }
 
-    return () => clearInterval(interval)
+  init()
 
-  }, [])
+  const interval = setInterval(async () => {
+    await loadData()
+    await loadRanking()
+  }, 10 * 60 * 1000)
+
+  return () => clearInterval(interval)
+
+}, [])
 
   // ======================
   // FILTRO POR FECHA
@@ -150,12 +160,23 @@ export default function RankingPage() {
   }
 
   if(range === "yesterday"){
-    startDate = new Date()
-    startDate.setDate(startDate.getDate()-1)
-    startDate.setHours(0,0,0,0)
-    endDate = new Date(startDate)
-    endDate.setDate(endDate.getDate()+1)
-  }
+  const nowUTC = new Date()
+
+  const startUTC = new Date(Date.UTC(
+    nowUTC.getUTCFullYear(),
+    nowUTC.getUTCMonth(),
+    nowUTC.getUTCDate() - 1
+  ))
+
+  const endUTC = new Date(Date.UTC(
+    nowUTC.getUTCFullYear(),
+    nowUTC.getUTCMonth(),
+    nowUTC.getUTCDate()
+  ))
+
+  startDate = startUTC
+  endDate = endUTC
+}
 
   if(range === "week"){
     const day = now.getDay()
