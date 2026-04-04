@@ -420,36 +420,39 @@ export default function ProfilePage() {
 
           {topArtists.map(([artist,plays]:any,index:number)=>{
 
-            const stream = streams.find(
-              (s:any)=>s.artist_name.toUpperCase().includes(artist)
+            const meta = (musicMetadata as any[]).find(
+              (m)=>
+                m.artist?.toLowerCase() === artist.toLowerCase()
             )
 
-            return(
-              <div key={artist} style={{
-                display:"flex",
-                alignItems:"center",
-                gap:"10px",
-                background:"#111",
-                padding:"12px",
-                borderRadius:"12px",
-                marginTop:"10px"
-              }}>
-                <b>{index+1}</b>
+              return(
+                <div key={artist} style={{
+                  display:"flex",
+                  alignItems:"center",
+                  gap:"10px",
+                  background:"#111",
+                  padding:"12px",
+                  borderRadius:"12px",
+                  marginTop:"10px"
+                }}>
+                  <b>{index+1}</b>
 
-                {stream?.artist_image &&(
-                  <img src={stream.artist_image} width="50" height="50" style={{borderRadius:"50%"}}/>
-                )}
+                  <img
+                    src={meta?.artist_image || "/fallback.jpg"}
+                    width="50"
+                    height="50"
+                    style={{borderRadius:"50%"}}
+                  />
 
-                <div>
-                  <div>{artist}</div>
-                  <div style={{fontSize:"12px",opacity:.6}}>
-                    {plays} Streams
+                  <div>
+                    <div>{artist}</div>
+                    <div style={{fontSize:"12px",opacity:.6}}>
+                      {plays} Streams
+                    </div>
                   </div>
                 </div>
-
-              </div>
-            )
-          })}
+              )
+            })}
         </div>
 
       </div>
