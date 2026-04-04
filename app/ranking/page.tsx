@@ -170,7 +170,12 @@ export default function RankingPage() {
 
   const filteredStreams = streams.filter(s=>{
     if(range === "all") return true
+
     const date = new Date(s.played_at)
+
+    console.log("played_at:", s.played_at + "z")
+    console.log("parsed:", date)
+
     return date >= startDate && date < endDate
   })
 
