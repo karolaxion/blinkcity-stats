@@ -306,18 +306,12 @@ export default function RankingPage() {
           artistUsers.forEach(u => {
             userMap[u.username] = (userMap[u.username] || 0) + u.total_streams
           })
-
-          artistSongs.forEach(s => {
-            songMap[s.track_name] = (songMap[s.track_name] || 0) + s.total_streams
-          })
-
+          
           topUsers = Object.entries(userMap)
             .sort((a,b)=>b[1]-a[1])
             .slice(0,5)
 
-          topSongs = Object.entries(songMap)
-            .sort((a,b)=>b[1]-a[1])
-            .slice(0,5)
+          topSongs = topSongsCache[artist] || [] 
         }
 
         return (
