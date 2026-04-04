@@ -207,6 +207,21 @@ export default function RankingPage() {
   })
 
   // ======================
+  // 🆕 NUEVO (NO TOCAR NADA MÁS)
+  // ======================
+
+  async function getTopSongsByArtist(artist: string) {
+    const { data } = await supabase
+      .from("aggregated_daily_stats")
+      .select("track_name, total_streams")
+      .eq("artist", artist)
+      .order("total_streams", { ascending: false })
+      .limit(5)
+
+    return data || []
+  }
+
+  // ======================
 
   return (
     <div style={{padding:"40px"}}>
@@ -274,10 +289,7 @@ export default function RankingPage() {
             u.date >= startStr
           )
 
-          const artistSongs = aggregatedData.filter(s =>
-            s.artist === artist
-            
-          )
+          const artistSongs: any[] = []
 
           const userMap: Record<string, number> = {}
           const songMap: Record<string, number> = {}
