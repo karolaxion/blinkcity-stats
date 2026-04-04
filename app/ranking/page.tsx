@@ -133,7 +133,6 @@ export default function RankingPage() {
   }
 
   async function init() {
-    await loadData()
     await loadRanking()
     await testAggregated() // 👈 SOLO ESTO AGREGAMOS
   }
