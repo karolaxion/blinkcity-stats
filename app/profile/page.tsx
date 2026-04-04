@@ -164,19 +164,36 @@ export default function ProfilePage() {
   let endDate = new Date()
 
   if(range === "today"){
-    startDate = new Date()
-    startDate.setHours(0,0,0,0)
-    endDate = new Date(startDate)
-    endDate.setDate(endDate.getDate() + 1)
-  }
+  const now = new Date()
 
-  if(range === "yesterday"){
-    startDate = new Date()
-    startDate.setDate(startDate.getDate() - 1)
-    startDate.setHours(0,0,0,0)
-    endDate = new Date(startDate)
-    endDate.setDate(endDate.getDate() + 1)
-  }
+  startDate = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate()
+  ))
+
+  endDate = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() + 1
+  ))
+}
+
+if(range === "yesterday"){
+  const now = new Date()
+
+  startDate = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() - 1
+  ))
+
+  endDate = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate()
+  ))
+}
 
   if(range === "week"){
     const day = now.getDay()
