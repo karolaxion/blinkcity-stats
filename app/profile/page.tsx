@@ -532,35 +532,42 @@ export default function ProfilePage() {
 
                 {modalTopSongs.map(([song,plays]:any,index:number)=>{
 
-                  const stream = streams.find(
-                    (s:any)=>`${s.artist_name.toUpperCase()} — ${s.track_name}`===song
-                  )
+  const [artist, track] = song.split(" — ")
 
-                  return(
-                    <div key={song} style={{
-                      display:"flex",
-                      alignItems:"center",
-                      gap:"10px",
-                      background:"#1a1a1a",
-                      padding:"10px",
-                      borderRadius:"10px",
-                      marginTop:"10px"
-                    }}>
-                      <b>{index+1}</b>
+  const meta = (musicMetadata as any[]).find(
+    (m)=>
+      m.track_name?.toLowerCase() === track.toLowerCase() &&
+      m.artist?.toLowerCase() === artist.toLowerCase()
+  )
 
-                      {stream?.album_image &&(
-                        <img src={stream.album_image} width="45" height="45" style={{borderRadius:"6px"}}/>
-                      )}
+  return(
+    <div key={song} style={{
+      display:"flex",
+      alignItems:"center",
+      gap:"10px",
+      background:"#1a1a1a",
+      padding:"10px",
+      borderRadius:"10px",
+      marginTop:"10px"
+    }}>
+      <b>{index+1}</b>
 
-                      <div>
-                        <div style={{fontSize:"13px"}}>{song}</div>
-                        <div style={{fontSize:"11px",opacity:.6}}>
-                          {plays} streams
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+      <img
+        src={meta?.album_image || "/fallback.jpg"}
+        width="45"
+        height="45"
+        style={{borderRadius:"6px"}}
+      />
+
+      <div>
+        <div style={{fontSize:"13px"}}>{song}</div>
+        <div style={{fontSize:"11px",opacity:.6}}>
+          {plays} streams
+        </div>
+      </div>
+    </div>
+  )
+})}
               </div>
 
               <div>
