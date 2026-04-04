@@ -292,7 +292,9 @@ export default function ArtistPage() {
           {topSongs.map(([song,plays]:any,index:number)=>{
 
             const meta = musicMetadata.find(
-              m => m.track_name === song && isSameArtist(m.artist || "", normalizedArtist)
+              m =>
+                m.track_name?.toLowerCase() === song.toLowerCase() &&
+                m.artist?.toLowerCase() === normalizedArtist.toLowerCase()
             )
 
             return(
@@ -309,7 +311,7 @@ export default function ArtistPage() {
 
                 {meta?.album_image && (
                   <img
-                    src={meta.album_image}
+                    src={meta?.album_image || "/fallback.jpg"}
                     width="50"
                     height="50"
                     style={{borderRadius:"6px"}}
