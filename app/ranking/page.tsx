@@ -18,7 +18,8 @@ export default function RankingPage() {
   const [streams,setStreams] = useState<any[]>([])
   const [rankingUsers,setRankingUsers] = useState<any[]>([])
   const [rankingSongs,setRankingSongs] = useState<any[]>([])
-  const [musicMetadata,setMusicMetadata] = useState<any[]>([]) // ✅ NUEVO
+  const [musicMetadata,setMusicMetadata] = useState<any[]>([])
+  const [topSongsCache,setTopSongsCache] = useState<Record<string, any[]>>({})
   const [aggregatedData,setAggregatedData] = useState<any[]>([])
   const [range,setRange] = useState<"all"|"today"|"yesterday"|"week"|"last_week"|"month"|"last_month">("all")
 
@@ -123,30 +124,39 @@ export default function RankingPage() {
 
   useEffect(() => {
 
-  async function testAggregated() {
-    const { data, error } = await supabase
-      .from("aggregated_daily_stats")
-      .select("artist, track_name, total_streams")
-      .limit(5)
+    async function testAggregated() {
+      const { data } = await supabase
+        .from("aggregated_daily_stats")
+        .select("artist, track_name, total_streams")
+        .limit(5)
 
-    console.log("AGGREGATED TEST:", data)
-  }
+      console.log("AGGREGATED TEST:", data)
+    }
 
-  async function init() {
-    await loadRanking()
-    await testAggregated() // 👈 SOLO ESTO AGREGAMOS
-  }
+    async function init() {
+      await loadRanking()
+      await testAggregated()
 
-  init()
+      // 👇 IMPORTANTE: bien dentro de la función
+      for (const artist of ARTISTS) {
+        const data = await getTopSongsByArtist(artist)
 
-  const interval = setInterval(async () => {
-    await loadData()
-    await loadRanking()
-  }, 10 * 60 * 1000)
+        setTopSongsCache(prev => ({
+          ...prev,
+          [artist]: data.map(s => [s.track_name, s.total_streams])
+        }))
+      }
+    }
 
-  return () => clearInterval(interval)
+    init()
 
-}, [])
+    const interval = setInterval(async () => {
+      await loadRanking()
+    }, 10 * 60 * 1000)
+
+    return () => clearInterval(interval)
+
+  }, [])
 
   // ======================
   // FILTRO POR FECHA
