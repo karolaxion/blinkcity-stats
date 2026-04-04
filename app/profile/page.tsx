@@ -532,42 +532,42 @@ export default function ProfilePage() {
 
                 {modalTopSongs.map(([song,plays]:any,index:number)=>{
 
-  const [artist, track] = song.split(" — ")
+                  const [artist, track] = song.split(" — ")
+                
+                  const meta = (musicMetadata as any[]).find(
+                    (m)=>
+                      m.track_name?.toLowerCase() === track.toLowerCase() &&
+                      m.artist?.toLowerCase() === artist.toLowerCase()
+                  )
 
-  const meta = (musicMetadata as any[]).find(
-    (m)=>
-      m.track_name?.toLowerCase() === track.toLowerCase() &&
-      m.artist?.toLowerCase() === artist.toLowerCase()
-  )
+                  return(
+                    <div key={song} style={{
+                      display:"flex",
+                      alignItems:"center",
+                      gap:"10px",
+                      background:"#1a1a1a",
+                      padding:"10px",
+                      borderRadius:"10px",
+                      marginTop:"10px"
+                    }}>
+                      <b>{index+1}</b>
 
-  return(
-    <div key={song} style={{
-      display:"flex",
-      alignItems:"center",
-      gap:"10px",
-      background:"#1a1a1a",
-      padding:"10px",
-      borderRadius:"10px",
-      marginTop:"10px"
-    }}>
-      <b>{index+1}</b>
+                      <img
+                        src={meta?.album_image || "/fallback.jpg"}
+                        width="45"
+                        height="45"
+                        style={{borderRadius:"6px"}}
+                      />
 
-      <img
-        src={meta?.album_image || "/fallback.jpg"}
-        width="45"
-        height="45"
-        style={{borderRadius:"6px"}}
-      />
-
-      <div>
-        <div style={{fontSize:"13px"}}>{song}</div>
-        <div style={{fontSize:"11px",opacity:.6}}>
-          {plays} streams
-        </div>
-      </div>
-    </div>
-  )
-})}
+                      <div>
+                        <div style={{fontSize:"13px"}}>{song}</div>
+                        <div style={{fontSize:"11px",opacity:.6}}>
+                          {plays} streams
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
 
               <div>
@@ -575,8 +575,9 @@ export default function ProfilePage() {
 
                 {modalTopArtists.map(([artist,plays]:any,index:number)=>{
 
-                  const stream = streams.find(
-                    (s:any)=>s.artist_name.toUpperCase() === artist
+                  const meta = (musicMetadata as any[]).find(
+                    (m)=>
+                      m.artist?.toLowerCase() === artist.toLowerCase()
                   )
 
                   return(
@@ -591,9 +592,12 @@ export default function ProfilePage() {
                     }}>
                       <b>{index+1}</b>
 
-                      {stream?.artist_image &&(
-                        <img src={stream.artist_image} width="45" height="45" style={{borderRadius:"50%"}}/>
-                      )}
+                      <img
+                        src={meta?.artist_image || "/fallback.jpg"}
+                        width="45"
+                        height="45"
+                        style={{borderRadius:"50%"}}
+                      />
 
                       <div>
                         <div>{artist}</div>
@@ -602,7 +606,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
                     </div>
-                  )
+                   )
                 })}
               </div>
 
