@@ -4,7 +4,7 @@ const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET!
 let cachedToken: string | null = null
 let tokenExpires = 0
 
-async function getAccessToken() {
+export async function getAccessToken() {
 
   // 🔥 usar token cacheado si aún sirve
   if (cachedToken && Date.now() < tokenExpires) {
