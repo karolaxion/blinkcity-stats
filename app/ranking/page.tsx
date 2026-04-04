@@ -289,7 +289,9 @@ export default function RankingPage() {
 
                   // ✅ NUEVO: buscar metadata
                   const meta = musicMetadata.find(
-                    m => m.track_name === song && m.artist?.toUpperCase().includes(artist)
+                    m =>
+                      m.track_name?.toLowerCase() === song.toLowerCase() &&
+                      m.artist?.toLowerCase() === artist.toLowerCase()
                   )
 
                   return(
@@ -307,7 +309,7 @@ export default function RankingPage() {
                       {/* ✅ USAR METADATA */}
                       {meta?.album_image && (
                         <img
-                          src={meta.album_image}
+                          src={meta?.album_image || "/fallback.jpg"}
                           width="50"
                           height="50"
                           style={{ borderRadius:"6px" }}
