@@ -247,7 +247,11 @@ if(range === "yesterday"){
 
     const startStr = startDate.toISOString().split("T")[0]
 
-    const filtered = songDailyStats.filter((s:any)=> s.date >= startStr)
+    const endStr = endDate.toISOString().split("T")[0]
+
+    const filtered = songDailyStats.filter((s:any)=>
+      s.date >= startStr && s.date < endStr
+    )
 
     const songCounts:any = {}
     const artistCounts:any = {}
