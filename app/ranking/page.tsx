@@ -19,6 +19,7 @@ export default function RankingPage() {
   const [rankingUsers,setRankingUsers] = useState<any[]>([])
   const [rankingSongs,setRankingSongs] = useState<any[]>([])
   const [musicMetadata,setMusicMetadata] = useState<any[]>([]) // ✅ NUEVO
+  const [aggregatedData,setAggregatedData] = useState<any[]>([])
   const [range,setRange] = useState<"all"|"today"|"yesterday"|"week"|"last_week"|"month"|"last_month">("all")
 
   // ======================
@@ -32,9 +33,14 @@ export default function RankingPage() {
     // ✅ NUEVO (leer metadata)
     const { data: meta } = await supabase.from("music_metadata").select("*")
 
+    const { data: agg } = await supabase
+    .from("aggregated_daily_stats")
+    .select("*")
+
     setRankingUsers(users || [])
     setRankingSongs(songs || [])
     setMusicMetadata(meta || []) // ✅ NUEVO
+    setAggregatedData(agg || [])
   }
 
   // ======================
@@ -268,9 +274,9 @@ export default function RankingPage() {
             u.date >= startStr
           )
 
-          const artistSongs = rankingSongs.filter(s =>
-            s.artist === artist &&
-            s.date >= startStr
+          const artistSongs = aggregatedData.filter(s =>
+            s.artist === artist
+            
           )
 
           const userMap: Record<string, number> = {}
