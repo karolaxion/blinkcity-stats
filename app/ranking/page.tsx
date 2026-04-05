@@ -151,7 +151,7 @@ export default function RankingPage() {
 
         setTopUsersCache(prev => ({
           ...prev,
-          [artist]: users.map(u => [u.user_id, u.total_streams])
+          [artist]: users.map(u => [u.username, u.total_streams])
         }))
       }
     }
@@ -267,15 +267,29 @@ export default function RankingPage() {
         (map[s.user_id] || 0) + s.total_streams
     })
 
-    const result = Object.entries(map)
+    const sorted = Object.entries(map)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([user_id, total_streams]) => ({
-        user_id,
-        total_streams
-      }))
 
-    return result
+    // 🔥 traer usernames
+    const userIds = sorted.map(([id]) => id)
+
+    const { data: users } = await supabase
+      .from("users")
+      .select("id, lastfm_username")
+      .in("id", userIds)
+
+    const userMap: Record<string, string> = {}
+  
+    users?.forEach((u: any) => {
+      userMap[u.id] = u.lastfm_username
+    })
+
+    return sorted.map(([user_id, total_streams]) => ({
+      user_id,
+      username: userMap[user_id] || user_id,
+      total_streams
+    }))
   }
 
   // ======================
