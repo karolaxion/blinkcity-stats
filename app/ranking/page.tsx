@@ -224,10 +224,24 @@ export default function RankingPage() {
       .from("aggregated_daily_stats")
       .select("track_name, total_streams")
       .eq("artist", artist)
-      .order("total_streams", { ascending: false })
-      .limit(5)
 
-    return data || []
+    // ✅ AGRUPAR EN FRONT (simple y seguro)
+    const map: Record<string, number> = {}
+
+    data?.forEach((s: any) => {
+      map[s.track_name] =
+        (map[s.track_name] || 0) + s.total_streams
+    })
+
+    const result = Object.entries(map)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([track_name, total_streams]) => ({
+        track_name,
+        total_streams
+      }))
+
+    return result
   }
 
   // ======================
